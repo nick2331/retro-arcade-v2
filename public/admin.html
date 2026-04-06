@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RETRO ARCADE — ADMIN</title>
+<script src="/socket.io/socket.io.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Share+Tech+Mono&display=swap');
+:root{
+  --black:#0a0a0f;--dark:#12121a;--card:#1a1a28;
+  --green:#00ff88;--yellow:#ffe600;--pink:#ff2d78;--blue:#00d4ff;--orange:#ff6b00;
+  --muted:#6666aa;--pixel:'Press Start 2P',monospace;--mono:'Share Tech Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--black);color:#e0e0f0;font-family:var(--mono);min-height:100vh;}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.07) 2px,rgba(0,0,0,.07) 4px);pointer-events:none;z-index:999;}
+
+/* LAYOUT */
+.admin-layout{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto 1fr auto;gap:14px;padding:16px;max-width:1200px;margin:0 auto;min-height:100vh;}
+@media(max-width:700px){.admin-layout{grid-template-columns:1fr;}}
+
+/* HEADER */
+.header{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+.logo{font-family:var(--pixel);font-size:clamp(11px,2.5vw,18px);color:var(--pink);text-shadow:0 0 14px var(--pink);}
+.logo span{color:var(--yellow);text-shadow:0 0 14px var(--yellow);}
+.status-pill{font-family:var(--pixel);font-size:9px;padding:7px 14px;border-radius:20px;background:var(--dark);border:1px solid var(--muted);}
+.status-pill.active{border-color:var(--green);color:var(--green);box-shadow:0 0 10px rgba(0,255,136,.3);}
+.status-pill.idle{border-color:var(--muted);color:var(--muted);}
+
+/* CARD */
+.panel{background:var(--card);border:1.5px solid var(--blue);border-radius:6px;padding:18px;display:flex;flex-direction:column;gap:12px;box-shadow:0 0 16px rgba(0,212,255,.1);}
+.panel-title{font-family:var(--pixel);font-size:clamp(8px,2vw,11px);color:var(--blue);letter-spacing:2px;border-bottom:1px solid rgba(0,212,255,.2);padding-bottom:10px;}
+
+/* GAME BUTTONS */
+.game-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.game-btn{background:var(--dark);border:1.5px solid var(--muted);border-radius:4px;padding:12px 8px;cursor:pointer;text-align:center;transition:all .2s;font-family:var(--pixel);}
+.game-btn:hover{border-color:var(--yellow);transform:translateY(-2px);}
+.game-btn.selected{border-color:var(--yellow);background:rgba(255,230,0,.08);box-shadow:0 0 14px rgba(255,230,0,.3);}
+.game-btn-emoji{font-size:clamp(22px,4vw,32px);display:block;margin-bottom:6px;}
+.game-btn-name{font-size:clamp(7px,1.8vw,9px);color:var(--yellow);display:block;margin-bottom:3px;}
+.game-btn-desc{font-size:9px;color:var(--muted);}
+
+/* BUTTONS */
+.btn{font-family:var(--pixel);font-size:clamp(8px,2vw,11px);padding:13px 20px;border:none;cursor:pointer;border-radius:3px;width:100%;letter-spacing:1px;transition:filter .15s,transform .1s;}
+.btn:active{transform:scale(.97);}
+.btn-green{background:var(--green);color:var(--black);box-shadow:0 0 14px rgba(0,255,136,.4);}
+.btn-green:hover{filter:brightness(1.15);}
+.btn-pink{background:var(--pink);color:white;box-shadow:0 0 14px rgba(255,45,120,.4);}
+.btn-pink:hover{filter:brightness(1.15);}
+.btn-yellow{background:var(--yellow);color:var(--black);}
+.btn-gray{background:#2a2a3a;color:#777;cursor:not-allowed;}
+.btn-orange{background:var(--orange);color:white;}
+
+/* PLAYER LIST */
+.player-list{display:flex;flex-direction:column;gap:6px;max-height:320px;overflow-y:auto;}
+.player-row{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--dark);border:1px solid rgba(0,212,255,.15);border-radius:4px;transition:all .3s;}
+.player-row.new-anim{animation:pop .4s ease;}
+@keyframes pop{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
+.p-avatar{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--pixel);font-size:10px;flex-shrink:0;}
+.p-name{font-family:var(--pixel);font-size:clamp(8px,2vw,10px);flex:1;}
+.p-score{font-family:var(--pixel);font-size:clamp(9px,2vw,12px);color:var(--green);min-width:60px;text-align:right;}
+.p-rank{font-size:14px;min-width:22px;}
+.empty-msg{text-align:center;color:var(--muted);font-size:11px;padding:20px;font-family:var(--pixel);}
+
+/* RANKING */
+.ranking-row{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:4px;margin:3px 0;transition:all .4s;}
+.ranking-row.r1{background:rgba(255,230,0,.12);border:1px solid var(--yellow);}
+.ranking-row.r2{background:rgba(192,192,192,.08);border:1px solid #888;}
+.ranking-row.r3{background:rgba(205,127,50,.08);border:1px solid #cd7f32;}
+.ranking-row.rn{background:var(--dark);border:1px solid rgba(255,255,255,.05);}
+.rank-num{font-family:var(--pixel);font-size:12px;min-width:28px;}
+.rank-name{font-family:var(--pixel);font-size:clamp(7px,2vw,10px);flex:1;}
+.rank-score{font-family:var(--pixel);font-size:clamp(10px,2vw,13px);color:var(--green);text-shadow:0 0 8px var(--green);}
+
+/* TIMER */
+.game-timer{text-align:center;}
+.timer-num{font-family:var(--pixel);font-size:clamp(32px,8vw,56px);color:var(--pink);text-shadow:0 0 20px var(--pink);}
+.timer-bar-wrap{height:10px;background:var(--dark);border-radius:3px;overflow:hidden;margin-top:8px;border:1px solid var(--muted);}
+.timer-bar{height:100%;background:var(--green);transition:width .25s linear,background .5s;}
+.current-game-badge{display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(255,230,0,.08);border:1px solid var(--yellow);border-radius:4px;}
+.cg-emoji{font-size:24px;}
+.cg-name{font-family:var(--pixel);font-size:clamp(9px,2.5vw,13px);color:var(--yellow);}
+
+/* BOTTOM */
+.footer{grid-column:1/-1;display:flex;gap:10px;flex-wrap:wrap;}
+.footer .btn{max-width:240px;}
+
+/* LINK BOX */
+.link-box{background:var(--dark);border:1px solid var(--green);border-radius:4px;padding:10px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.link-url{font-family:var(--mono);font-size:clamp(10px,2.5vw,14px);color:var(--green);flex:1;word-break:break-all;}
+.copy-btn{font-family:var(--pixel);font-size:8px;padding:6px 10px;background:var(--green);color:var(--black);border:none;border-radius:2px;cursor:pointer;}
+.copy-btn:active{filter:brightness(.8);}
+
+/* COUNTER BADGE */
+.count-badge{font-family:var(--pixel);font-size:10px;background:var(--blue);color:var(--black);padding:3px 8px;border-radius:10px;margin-left:6px;}
+
+::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-track{background:var(--dark);}::-webkit-scrollbar-thumb{background:var(--blue);border-radius:3px;}
+</style>
+</head>
+<body>
+<div class="admin-layout">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div>
+      <div class="logo">RETRO <span>ARCADE</span> — PANEL ADMIN</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:5px;font-family:var(--mono);">Solo tú ves esta pantalla</div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+      <div class="status-pill idle" id="statusPill">⏸ EN ESPERA</div>
+      <div style="font-family:var(--pixel);font-size:9px;color:var(--muted);" id="playerCountBadge">0 JUGADORES</div>
+    </div>
+  </div>
+
+  <!-- PANEL IZQUIERDO: Jugadores + Link -->
+  <div style="display:flex;flex-direction:column;gap:14px;">
+
+    <!-- Link para compartir -->
+    <div class="panel">
+      <div class="panel-title">📎 LINK PARA JUGADORES</div>
+      <div class="link-box">
+        <span class="link-url" id="playerLink">Cargando...</span>
+        <button class="copy-btn" onclick="copyLink()">COPIAR</button>
+      </div>
+      <div style="font-size:10px;color:var(--muted);">Comparte este link con tus jugadores por WhatsApp, etc.</div>
+    </div>
+
+    <!-- Jugadores conectados -->
+    <div class="panel" style="flex:1;">
+      <div class="panel-title">
+        👥 JUGADORES CONECTADOS
+        <span class="count-badge" id="playerCount">0</span>
+      </div>
+      <div class="player-list" id="playerList">
+        <div class="empty-msg">Esperando jugadores...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL DERECHO: Control + Ranking -->
+  <div style="display:flex;flex-direction:column;gap:14px;">
+
+    <!-- Control de juego -->
+    <div class="panel" id="controlPanel">
+      <div class="panel-title">🎮 CONTROL DEL JUEGO</div>
+
+      <!-- Estado: idle -->
+      <div id="idleControls">
+        <div style="font-size:10px;color:var(--muted);margin-bottom:10px;">Elige un juego y da inicio:</div>
+        <div class="game-grid" id="gameGrid"></div>
+        <button class="btn btn-gray" id="startBtn" onclick="startGame()" style="margin-top:10px;" disabled>
+          ▶▶ INICIAR JUEGO
+        </button>
+      </div>
+
+      <!-- Estado: en juego -->
+      <div id="activeControls" style="display:none;">
+        <div class="current-game-badge" id="currentGameBadge">
+          <span class="cg-emoji" id="cgEmoji">🎮</span>
+          <div><div class="cg-name" id="cgName">JUEGO</div><div style="font-size:9px;color:var(--muted);">En progreso</div></div>
+        </div>
+        <div class="game-timer">
+          <div class="timer-num" id="timerNum">60</div>
+          <div style="font-size:9px;color:var(--muted);font-family:var(--pixel);margin-top:4px;">SEGUNDOS</div>
+          <div class="timer-bar-wrap"><div class="timer-bar" id="timerBar"></div></div>
+        </div>
+        <button class="btn btn-orange" onclick="endGameNow()" style="margin-top:4px;">⏹ TERMINAR AHORA</button>
+      </div>
+    </div>
+
+    <!-- Ranking en vivo -->
+    <div class="panel" style="flex:1;">
+      <div class="panel-title">🏆 RANKING EN VIVO</div>
+      <div id="rankingList" style="display:flex;flex-direction:column;gap:4px;max-height:300px;overflow-y:auto;">
+        <div class="empty-msg">El ranking aparece aquí durante el juego</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <button class="btn btn-gray" onclick="resetRoom()" style="max-width:200px;">🔄 REINICIAR SALA</button>
+  </div>
+
+</div>
+
+<script>
+const socket = io();
+let selectedGame = -1;
+let timerInterval = null;
+let timeLeft = 60;
+const GAMES = [
+  { id:0, name:'BREAKOUT',   emoji:'🧱', desc:'Rompe los bloques' },
+  { id:1, name:'SNAKE',      emoji:'🐍', desc:'Come sin chocar' },
+  { id:2, name:'SPACE INV.', emoji:'🚀', desc:'Destruye aliens' },
+  { id:3, name:'TETRIS',     emoji:'🟦', desc:'Completa líneas' },
+];
+const avatarColors = ['#ff2d78','#00ff88','#ffe600','#00d4ff','#ff6b00','#aa00ff','#ff88cc','#88ffcc'];
+
+// ── Link ──
+window.addEventListener('load', () => {
+  const base = window.location.origin;
+  document.getElementById('playerLink').textContent = base + '/play';
+});
+function copyLink() {
+  const url = window.location.origin + '/play';
+  navigator.clipboard.writeText(url).then(() => {
+    const btn = document.querySelector('.copy-btn');
+    btn.textContent = '✓ COPIADO'; btn.style.background = '#ffe600';
+    setTimeout(() => { btn.textContent = 'COPIAR'; btn.style.background = ''; }, 2000);
+  });
+}
+
+// ── Build game grid ──
+const grid = document.getElementById('gameGrid');
+GAMES.forEach(g => {
+  const d = document.createElement('div');
+  d.className = 'game-btn'; d.id = 'gbtn' + g.id;
+  d.innerHTML = `<span class="game-btn-emoji">${g.emoji}</span><span class="game-btn-name">${g.name}</span><span class="game-btn-desc">${g.desc}</span>`;
+  d.onclick = () => selectGame(g.id);
+  grid.appendChild(d);
+});
+
+function selectGame(id) {
+  selectedGame = id;
+  document.querySelectorAll('.game-btn').forEach(b => b.classList.remove('selected'));
+  document.getElementById('gbtn' + id).classList.add('selected');
+  socket.emit('admin_select_game', { gameId: id });
+  const btn = document.getElementById('startBtn');
+  btn.disabled = false; btn.className = 'btn btn-pink'; btn.style.marginTop = '10px';
+  btn.textContent = `▶▶ INICIAR ${GAMES[id].name}`;
+}
+
+function startGame() {
+  if (selectedGame < 0) return;
+  socket.emit('admin_start_game', { gameId: selectedGame });
+}
+
+function endGameNow() {
+  socket.emit('admin_end_game');
+}
+
+function resetRoom() {
+  if (confirm('¿Reiniciar la sala? Se borran los puntajes de esta ronda.')) {
+    socket.emit('admin_reset');
+  }
+}
+
+// ── Socket events ──
+socket.on('state_update', ({ players, playerCount, gameActive, currentGame }) => {
+  updatePlayerList(players);
+  document.getElementById('playerCount').textContent = playerCount;
+  document.getElementById('playerCountBadge').textContent = `${playerCount} JUGADOR${playerCount !== 1 ? 'ES' : ''}`;
+});
+
+socket.on('game_selected', ({ game }) => {
+  // Already handled locally
+});
+
+socket.on('game_start', ({ gameId, game }) => {
+  document.getElementById('idleControls').style.display = 'none';
+  document.getElementById('activeControls').style.display = 'block';
+  document.getElementById('cgEmoji').textContent = game.emoji;
+  document.getElementById('cgName').textContent = game.name;
+  document.getElementById('statusPill').textContent = '🟢 JUGANDO';
+  document.getElementById('statusPill').className = 'status-pill active';
+  startTimerDisplay();
+});
+
+socket.on('live_ranking', (ranking) => {
+  updateRanking(ranking);
+});
+
+socket.on('game_end', ({ ranking, game }) => {
+  clearInterval(timerInterval);
+  document.getElementById('activeControls').style.display = 'none';
+  document.getElementById('idleControls').style.display = 'block';
+  document.getElementById('statusPill').textContent = '⏸ EN ESPERA';
+  document.getElementById('statusPill').className = 'status-pill idle';
+  updateRanking(ranking, true);
+  selectedGame = -1;
+  document.querySelectorAll('.game-btn').forEach(b => b.classList.remove('selected'));
+  document.getElementById('startBtn').disabled = true;
+  document.getElementById('startBtn').className = 'btn btn-gray';
+  document.getElementById('startBtn').textContent = '▶▶ INICIAR JUEGO';
+});
+
+socket.on('room_reset', () => {
+  document.getElementById('rankingList').innerHTML = '<div class="empty-msg">El ranking aparece aquí durante el juego</div>';
+  updatePlayerList([]);
+});
+
+// ── Update UI ──
+function updatePlayerList(players) {
+  const list = document.getElementById('playerList');
+  if (!players || players.length === 0) {
+    list.innerHTML = '<div class="empty-msg">Esperando jugadores...</div>';
+    return;
+  }
+  // Preserve existing rows, update scores
+  const existing = {};
+  list.querySelectorAll('[data-name]').forEach(el => existing[el.dataset.name] = el);
+  const names = new Set(players.map(p => p.name));
+
+  // Remove disconnected
+  Object.keys(existing).forEach(n => { if (!names.has(n)) existing[n].remove(); });
+
+  // Add/update
+  players.forEach((p, i) => {
+    const col = avatarColors[i % avatarColors.length];
+    const init = (p.name || '?').slice(0, 2);
+    if (existing[p.name]) {
+      existing[p.name].querySelector('.p-score').textContent = p.score || 0;
+    } else {
+      const row = document.createElement('div');
+      row.className = 'player-row new-anim'; row.dataset.name = p.name;
+      row.innerHTML = `<div class="p-avatar" style="background:${col}22;border:1px solid ${col};color:${col}">${init}</div>
+        <span class="p-name">${p.name}</span>
+        <span class="p-score">${p.score || 0}</span>`;
+      list.appendChild(row);
+    }
+  });
+}
+
+function updateRanking(ranking, final = false) {
+  const list = document.getElementById('rankingList');
+  if (!ranking || ranking.length === 0) {
+    list.innerHTML = '<div class="empty-msg">Sin jugadores aún</div>';
+    return;
+  }
+  const medals = ['🥇', '🥈', '🥉'];
+  list.innerHTML = ranking.map((r, i) => `
+    <div class="ranking-row ${i === 0 ? 'r1' : i === 1 ? 'r2' : i === 2 ? 'r3' : 'rn'}">
+      <span class="rank-num">${i < 3 ? medals[i] : '#' + (i + 1)}</span>
+      <span class="rank-name" style="${i === 0 ? 'color:var(--yellow)' : ''}">${r.name}</span>
+      <span class="rank-score">${r.score}</span>
+    </div>`).join('');
+  if (final) {
+    const title = document.querySelector('#rankingList')?.parentElement?.querySelector('.panel-title');
+    if (title) title.textContent = '🏆 RESULTADO FINAL';
+  }
+}
+
+function startTimerDisplay() {
+  timeLeft = 60;
+  clearInterval(timerInterval);
+  document.getElementById('timerNum').textContent = '60';
+  document.getElementById('timerBar').style.width = '100%';
+  document.getElementById('timerBar').style.background = 'var(--green)';
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    document.getElementById('timerNum').textContent = timeLeft;
+    const pct = (timeLeft / 60) * 100;
+    const bar = document.getElementById('timerBar');
+    bar.style.width = pct + '%';
+    if (pct < 30) bar.style.background = 'var(--pink)';
+    else if (pct < 60) bar.style.background = 'var(--yellow)';
+    if (timeLeft <= 0) clearInterval(timerInterval);
+  }, 1000);
+}
+</script>
+</body>
+</html>
