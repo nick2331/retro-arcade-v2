@@ -5,188 +5,133 @@ const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, {
-  cors: { origin: '*', methods: ['GET', 'POST'] }
-});
+const io = new Server(server, { cors: { origin: '*', methods: ['GET', 'POST'] } });
 
-// ─── Static files ───────────────────────────────────────────
 app.use(express.static(path.join(__dirname, 'public')));
-
-// ─── Routes ─────────────────────────────────────────────────
-app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'play.html')));
-app.get('/play', (req, res) => res.sendFile(path.join(__dirname, 'public', 'play.html')));
+app.get('/',      (req, res) => res.sendFile(path.join(__dirname, 'public', 'play.html')));
+app.get('/play',  (req, res) => res.sendFile(path.join(__dirname, 'public', 'play.html')));
 app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
-
-// ─── Game State ──────────────────────────────────────────────
-const state = {
-  players: {},       // socketId -> { name, score, game, connected }
-  gameActive: false,
-  currentGame: null, // 0-3
-  gameStartTime: null,
-  scores: [],        // historical scores
-};
 
 const GAMES = [
   { id: 0, name: 'BREAKOUT',   emoji: '🧱', desc: 'Rompe todos los bloques' },
-  { id: 1, name: 'SNAKE',      emoji: '🐍', desc: 'Come y crece sin morir' },
-  { id: 2, name: 'SPACE INV.', emoji: '🚀', desc: 'Destruye los aliens' },
-  { id: 3, name: 'TETRIS',     emoji: '🟦', desc: 'Completa líneas' },
+  { id: 1, name: 'SNAKE',      emoji: '🐍', desc: 'Come y crece sin morir'  },
+  { id: 2, name: 'SPACE INV.', emoji: '🚀', desc: 'Destruye los aliens'     },
+  { id: 3, name: 'TETRIS',     emoji: '🟦', desc: 'Completa líneas'         },
 ];
+const ROUND_SECS = 60;
 
-// ─── Helpers ─────────────────────────────────────────────────
+const state = {
+  players:     {},
+  phase:       'lobby',
+  currentGame: -1,
+  roundScores: [],
+  gameTimeout: null,
+};
+
 function getPlayerList() {
   return Object.values(state.players).map(p => ({
-    name: p.name,
-    score: p.score,
-    game: p.game,
+    name: p.name, score: p.score, lives: p.lives, alive: p.alive,
   }));
 }
-
 function getRanking() {
   return Object.values(state.players)
     .sort((a, b) => b.score - a.score)
     .map((p, i) => ({ rank: i + 1, name: p.name, score: p.score }));
 }
-
 function broadcastState() {
   io.emit('state_update', {
-    players: getPlayerList(),
+    players:     getPlayerList(),
     playerCount: Object.values(state.players).length,
-    gameActive: state.gameActive,
+    phase:       state.phase,
     currentGame: state.currentGame,
+    game:        state.currentGame >= 0 ? GAMES[state.currentGame] : null,
+    totalGames:  GAMES.length,
   });
 }
 
-// ─── Socket.io Events ────────────────────────────────────────
+function launchRound(idx) {
+  if (idx >= GAMES.length) {
+    state.phase = 'done';
+    io.emit('competition_end', { ranking: getRanking(), rounds: state.roundScores });
+    broadcastState();
+    return;
+  }
+  state.currentGame = idx;
+  state.phase = 'countdown';
+  Object.keys(state.players).forEach(id => {
+    state.players[id].score = 0;
+    state.players[id].lives = 3;
+    state.players[id].alive = true;
+  });
+  io.emit('round_countdown', { gameIdx: idx, game: GAMES[idx], totalGames: GAMES.length, roundNum: idx + 1 });
+  broadcastState();
+  setTimeout(() => {
+    state.phase = 'playing';
+    io.emit('round_start', { gameIdx: idx, game: GAMES[idx], duration: ROUND_SECS, roundNum: idx + 1, totalGames: GAMES.length });
+    broadcastState();
+    clearTimeout(state.gameTimeout);
+    state.gameTimeout = setTimeout(() => endRound(idx), (ROUND_SECS + 2) * 1000);
+  }, 4000);
+}
+
+function endRound(idx) {
+  if (state.phase !== 'playing') return;
+  clearTimeout(state.gameTimeout);
+  const ranking = getRanking();
+  state.roundScores.push({ game: GAMES[idx], ranking, ts: new Date().toISOString() });
+  state.phase = 'results';
+  io.emit('round_end', {
+    game: GAMES[idx], ranking,
+    nextGame:   idx + 1 < GAMES.length ? GAMES[idx + 1] : null,
+    isLast:     idx + 1 >= GAMES.length,
+    roundNum:   idx + 1,
+    totalGames: GAMES.length,
+  });
+  broadcastState();
+}
+
 io.on('connection', (socket) => {
-  console.log('🔌 Connected:', socket.id);
-
-  // ── Player joins ──
   socket.on('player_join', ({ name }) => {
-    const cleanName = String(name).toUpperCase().replace(/\s/g, '_').slice(0, 12);
-    // Check duplicate
-    const taken = Object.values(state.players).find(p => p.name === cleanName);
-    if (taken) {
-      socket.emit('join_error', { msg: 'Ese nombre ya está en uso' });
-      return;
+    const clean = String(name).toUpperCase().replace(/\s/g, '_').slice(0, 12);
+    if (Object.values(state.players).find(p => p.name === clean)) {
+      socket.emit('join_error', { msg: 'Ese nombre ya está en uso' }); return;
     }
-    state.players[socket.id] = {
-      name: cleanName,
-      score: 0,
-      game: state.currentGame !== null ? GAMES[state.currentGame]?.name : null,
-      socketId: socket.id,
-    };
-    socket.emit('join_ok', {
-      name: cleanName,
-      gameActive: state.gameActive,
-      currentGame: state.currentGame,
-      games: GAMES,
-    });
-    // Tell admin + everyone
+    state.players[socket.id] = { name: clean, score: 0, lives: 3, alive: true };
+    socket.emit('join_ok', { name: clean, phase: state.phase, currentGame: state.currentGame, game: state.currentGame >= 0 ? GAMES[state.currentGame] : null, games: GAMES });
     broadcastState();
-    console.log(`👤 Player joined: ${cleanName}`);
   });
 
-  // ── Admin selects game ──
-  socket.on('admin_select_game', ({ gameId }) => {
-    if (gameId < 0 || gameId >= GAMES.length) return;
-    state.currentGame = gameId;
-    io.emit('game_selected', { game: GAMES[gameId] });
-    broadcastState();
-    console.log(`🎮 Game selected: ${GAMES[gameId].name}`);
+  socket.on('admin_start',      () => { if (state.phase !== 'lobby') return; state.roundScores = []; launchRound(0); });
+  socket.on('admin_next_round', () => { if (state.phase !== 'results') return; launchRound(state.currentGame + 1); });
+  socket.on('admin_end_round',  () => { if (state.phase === 'playing') endRound(state.currentGame); });
+  socket.on('admin_reset', () => {
+    clearTimeout(state.gameTimeout);
+    state.phase = 'lobby'; state.currentGame = -1; state.roundScores = [];
+    Object.keys(state.players).forEach(id => { state.players[id].score = 0; state.players[id].lives = 3; state.players[id].alive = true; });
+    io.emit('room_reset'); broadcastState();
   });
 
-  // ── Admin starts game ──
-  socket.on('admin_start_game', ({ gameId }) => {
-    if (gameId === undefined || gameId === null) return;
-    state.currentGame = gameId;
-    state.gameActive = true;
-    state.gameStartTime = Date.now();
-
-    // Reset scores for this round
-    Object.keys(state.players).forEach(id => {
-      state.players[id].score = 0;
-      state.players[id].game = GAMES[gameId].name;
-    });
-
-    io.emit('game_start', { gameId, game: GAMES[gameId] });
-    broadcastState();
-    console.log(`🚀 Game started: ${GAMES[gameId].name}`);
-
-    // Auto-end after 65 seconds
-    setTimeout(() => {
-      if (state.gameActive) {
-        state.gameActive = false;
-        const ranking = getRanking();
-        // Save to history
-        state.scores.push({
-          game: GAMES[gameId].name,
-          ts: new Date().toISOString(),
-          ranking,
-        });
-        io.emit('game_end', { ranking, game: GAMES[gameId] });
-        broadcastState();
-        console.log('⏱ Game ended (timeout)');
-      }
-    }, 65000);
-  });
-
-  // ── Player updates score ──
   socket.on('score_update', ({ score }) => {
-    if (state.players[socket.id]) {
+    if (state.players[socket.id] && state.phase === 'playing') {
       state.players[socket.id].score = score;
-      // Broadcast live ranking to admin + all
       io.emit('live_ranking', getRanking());
     }
   });
-
-  // ── Player finished (game over) ──
-  socket.on('player_game_over', ({ score, name }) => {
-    if (state.players[socket.id]) {
-      state.players[socket.id].score = score;
-    }
+  socket.on('life_lost', ({ lives, score }) => {
+    if (!state.players[socket.id]) return;
+    state.players[socket.id].lives = lives;
+    state.players[socket.id].score = score;
+    if (lives <= 0) state.players[socket.id].alive = false;
+    io.emit('live_ranking', getRanking()); broadcastState();
+  });
+  socket.on('player_game_over', ({ score }) => {
+    if (state.players[socket.id]) { state.players[socket.id].score = score; state.players[socket.id].alive = false; state.players[socket.id].lives = 0; }
     io.emit('live_ranking', getRanking());
   });
-
-  // ── Admin ends game manually ──
-  socket.on('admin_end_game', () => {
-    if (!state.gameActive) return;
-    state.gameActive = false;
-    const ranking = getRanking();
-    if (state.currentGame !== null) {
-      state.scores.push({
-        game: GAMES[state.currentGame].name,
-        ts: new Date().toISOString(),
-        ranking,
-      });
-    }
-    io.emit('game_end', { ranking, game: state.currentGame !== null ? GAMES[state.currentGame] : null });
-    broadcastState();
-    console.log('🛑 Game ended by admin');
-  });
-
-  // ── Admin resets room ──
-  socket.on('admin_reset', () => {
-    state.gameActive = false;
-    state.currentGame = null;
-    Object.keys(state.players).forEach(id => { state.players[id].score = 0; });
-    io.emit('room_reset');
-    broadcastState();
-    console.log('🔄 Room reset');
-  });
-
-  // ── Disconnect ──
   socket.on('disconnect', () => {
-    if (state.players[socket.id]) {
-      console.log(`👋 Player left: ${state.players[socket.id].name}`);
-      delete state.players[socket.id];
-      broadcastState();
-    }
+    if (state.players[socket.id]) { delete state.players[socket.id]; broadcastState(); }
   });
 });
 
-// ─── Start ───────────────────────────────────────────────────
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-  console.log(`✅ Retro Arcade running on port ${PORT}`);
-});
+server.listen(PORT, () => console.log(`✅ Retro Arcade on port ${PORT}`));
