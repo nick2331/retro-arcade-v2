@@ -11,186 +11,216 @@
 *{box-sizing:border-box;margin:0;padding:0;}
 body{background:var(--black);color:#e0e0f0;font-family:'Share Tech Mono',monospace;min-height:100vh;}
 body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.07) 2px,rgba(0,0,0,.07) 4px);pointer-events:none;z-index:999;}
-.layout{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:14px;max-width:1100px;margin:0 auto;}
-@media(max-width:680px){.layout{grid-template-columns:1fr;}}
-.header{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding-bottom:10px;border-bottom:1px solid rgba(0,212,255,.2);}
-.logo{font-family:'Press Start 2P',monospace;font-size:clamp(10px,2.5vw,16px);color:var(--pink);text-shadow:0 0 12px var(--pink);}
+.wrap{max-width:1000px;margin:0 auto;padding:14px;display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media(max-width:650px){.wrap{grid-template-columns:1fr;}}
+.full{grid-column:1/-1;}
+.header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;padding-bottom:10px;border-bottom:1px solid rgba(0,212,255,.2);}
+.logo{font-family:'Press Start 2P',monospace;font-size:clamp(9px,2.5vw,15px);color:var(--pink);}
 .logo span{color:var(--yellow);}
-.phase-pill{font-family:'Press Start 2P',monospace;font-size:8px;padding:6px 12px;border-radius:14px;border:1px solid var(--muted);color:var(--muted);}
-.phase-pill.playing{border-color:var(--green);color:var(--green);box-shadow:0 0 10px rgba(0,255,136,.3);}
-.phase-pill.results{border-color:var(--yellow);color:var(--yellow);}
-.panel{background:var(--card);border:1.5px solid rgba(0,212,255,.3);border-radius:6px;padding:16px;display:flex;flex-direction:column;gap:10px;}
-.ptitle{font-family:'Press Start 2P',monospace;font-size:clamp(7px,2vw,10px);color:var(--blue);letter-spacing:2px;padding-bottom:8px;border-bottom:1px solid rgba(0,212,255,.15);}
-.link-box{background:var(--dark);border:1px solid var(--green);border-radius:3px;padding:9px 12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
-.link-url{font-size:clamp(11px,2.5vw,14px);color:var(--green);flex:1;word-break:break-all;}
-.copy-btn{font-family:'Press Start 2P',monospace;font-size:7px;padding:5px 9px;background:var(--green);color:var(--black);border:none;border-radius:2px;cursor:pointer;white-space:nowrap;}
-.btn{font-family:'Press Start 2P',monospace;font-size:clamp(8px,2vw,11px);padding:14px 20px;border:none;cursor:pointer;border-radius:3px;width:100%;letter-spacing:1px;transition:filter .15s,transform .1s;}
+.pill{font-family:'Press Start 2P',monospace;font-size:8px;padding:5px 11px;border-radius:12px;border:1px solid var(--muted);color:var(--muted);}
+.pill.on{border-color:var(--green);color:var(--green);}
+.pill.res{border-color:var(--yellow);color:var(--yellow);}
+.panel{background:var(--card);border:1.5px solid rgba(0,212,255,.25);border-radius:6px;padding:14px;display:flex;flex-direction:column;gap:10px;}
+.pt{font-family:'Press Start 2P',monospace;font-size:clamp(7px,1.8vw,9px);color:var(--blue);letter-spacing:2px;padding-bottom:7px;border-bottom:1px solid rgba(0,212,255,.12);}
+.link-box{background:var(--dark);border:1px solid var(--green);border-radius:3px;padding:8px 11px;display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
+.link-url{font-size:clamp(11px,2.5vw,13px);color:var(--green);flex:1;word-break:break-all;}
+.cp-btn{font-family:'Press Start 2P',monospace;font-size:7px;padding:5px 8px;background:var(--green);color:var(--black);border:none;border-radius:2px;cursor:pointer;white-space:nowrap;}
+.btn{font-family:'Press Start 2P',monospace;font-size:clamp(8px,2vw,11px);padding:13px;border:none;cursor:pointer;border-radius:3px;width:100%;letter-spacing:1px;transition:filter .15s,transform .1s;margin:3px 0;}
 .btn:active{transform:scale(.97);}
-.btn-green{background:var(--green);color:var(--black);box-shadow:0 0 16px rgba(0,255,136,.4);}
+.btn-green{background:var(--green);color:var(--black);box-shadow:0 0 14px rgba(0,255,136,.35);}
 .btn-green:hover{filter:brightness(1.15);}
-.btn-pink{background:var(--pink);color:white;box-shadow:0 0 16px rgba(255,45,120,.4);}
+.btn-pink{background:var(--pink);color:white;}
 .btn-yellow{background:var(--yellow);color:var(--black);}
 .btn-orange{background:var(--orange);color:white;}
-.btn-gray{background:#2a2a3a;color:#666;}
-.game-badge{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:4px;border:1.5px solid var(--yellow);background:rgba(255,230,0,.06);}
-.gb-emoji{font-size:clamp(24px,5vw,36px);}
-.gb-name{font-family:'Press Start 2P',monospace;font-size:clamp(10px,2.5vw,15px);color:var(--yellow);}
-.gb-sub{font-size:10px;color:var(--muted);margin-top:3px;}
-.round-dots{display:flex;gap:6px;align-items:center;}
-.rdot{width:12px;height:12px;border-radius:50%;background:var(--dark);border:1.5px solid var(--muted);transition:all .3s;}
-.rdot.done{background:var(--green);border-color:var(--green);}
-.rdot.active{background:var(--yellow);border-color:var(--yellow);box-shadow:0 0 8px rgba(255,230,0,.5);}
-.timer-num{font-family:'Press Start 2P',monospace;font-size:clamp(36px,8vw,58px);color:var(--pink);text-shadow:0 0 20px var(--pink);text-align:center;}
-.tbar-w{height:10px;background:var(--dark);border-radius:3px;overflow:hidden;margin-top:8px;}
-.tbar{height:100%;background:var(--green);transition:width 1s linear,background .5s;width:100%;}
-.p-row{display:flex;align-items:center;gap:9px;padding:8px 11px;background:var(--dark);border:1px solid rgba(255,255,255,.05);border-radius:3px;transition:all .3s;}
-.p-av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Press Start 2P',monospace;font-size:9px;flex-shrink:0;}
-.p-name{font-family:'Press Start 2P',monospace;font-size:clamp(7px,2vw,9px);flex:1;}
-.p-lives{font-size:12px;letter-spacing:-2px;}
-.p-score{font-family:'Press Start 2P',monospace;font-size:clamp(9px,2vw,12px);color:var(--green);min-width:50px;text-align:right;}
-.p-list{display:flex;flex-direction:column;gap:5px;max-height:300px;overflow-y:auto;}
-.r-row{display:flex;align-items:center;gap:9px;padding:8px 11px;border-radius:3px;margin:3px 0;transition:all .4s;}
-.r-row.r1{background:rgba(255,230,0,.1);border:1px solid var(--yellow);}
-.r-row.r2{background:rgba(192,192,192,.06);border:1px solid #888;}
-.r-row.r3{background:rgba(205,127,50,.06);border:1px solid #cd7f32;}
-.r-row.rn{background:var(--dark);border:1px solid rgba(255,255,255,.04);}
-.r-rank{font-family:'Press Start 2P',monospace;font-size:11px;min-width:26px;}
-.r-name{font-family:'Press Start 2P',monospace;font-size:clamp(7px,2vw,9px);flex:1;}
-.r-score{font-family:'Press Start 2P',monospace;font-size:clamp(9px,2vw,12px);color:var(--green);}
-.footer{grid-column:1/-1;display:flex;gap:10px;}
-.empty{text-align:center;color:var(--muted);font-size:10px;padding:16px;font-family:'Press Start 2P',monospace;}
-.count-badge{font-family:'Press Start 2P',monospace;font-size:9px;background:var(--blue);color:var(--black);padding:2px 7px;border-radius:10px;margin-left:5px;}
+.btn-gray{background:#252535;color:#666;border:1px solid #333;}
+.game-now{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px solid var(--yellow);border-radius:4px;background:rgba(255,230,0,.05);}
+.gn-em{font-size:clamp(22px,5vw,34px);}
+.gn-name{font-family:'Press Start 2P',monospace;font-size:clamp(9px,2.5vw,14px);color:var(--yellow);}
+.gn-sub{font-size:9px;color:var(--muted);margin-top:2px;}
+.dots{display:flex;gap:5px;align-items:center;}
+.dot{width:11px;height:11px;border-radius:50%;background:var(--dark);border:1.5px solid var(--muted);transition:all .3s;}
+.dot.done{background:var(--green);border-color:var(--green);}
+.dot.active{background:var(--yellow);border-color:var(--yellow);box-shadow:0 0 7px rgba(255,230,0,.5);}
+.tnum{font-family:'Press Start 2P',monospace;font-size:clamp(34px,8vw,52px);color:var(--pink);text-align:center;}
+.tbar-w{height:9px;background:var(--dark);border-radius:3px;overflow:hidden;margin-top:6px;}
+.tbar{height:100%;background:var(--green);transition:width 1s linear,background .5s;}
+.prow{display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--dark);border:1px solid rgba(255,255,255,.04);border-radius:3px;}
+.pav{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Press Start 2P',monospace;font-size:8px;flex-shrink:0;}
+.pnm{font-family:'Press Start 2P',monospace;font-size:clamp(7px,1.8vw,9px);flex:1;}
+.plv{font-size:11px;letter-spacing:-1px;}
+.psc{font-family:'Press Start 2P',monospace;font-size:clamp(8px,2vw,11px);color:var(--green);min-width:44px;text-align:right;}
+.plist{display:flex;flex-direction:column;gap:4px;max-height:260px;overflow-y:auto;}
+.rrow{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:3px;margin:2px 0;}
+.rrow.r1{background:rgba(255,230,0,.08);border:1px solid var(--yellow);}
+.rrow.r2{background:rgba(192,192,192,.05);border:1px solid #777;}
+.rrow.r3{background:rgba(205,127,50,.05);border:1px solid #cd7f32;}
+.rrow.rn{background:var(--dark);border:1px solid rgba(255,255,255,.04);}
+.rrk{font-family:'Press Start 2P',monospace;font-size:10px;min-width:24px;}
+.rnm{font-family:'Press Start 2P',monospace;font-size:clamp(7px,1.8vw,9px);flex:1;}
+.rsc{font-family:'Press Start 2P',monospace;font-size:clamp(9px,2vw,11px);color:var(--green);}
+.badge{font-family:'Press Start 2P',monospace;font-size:8px;background:var(--blue);color:var(--black);padding:2px 6px;border-radius:8px;margin-left:4px;}
+.empty{text-align:center;color:var(--muted);font-size:9px;padding:14px;font-family:'Press Start 2P',monospace;}
 ::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:var(--dark);}::-webkit-scrollbar-thumb{background:var(--blue);border-radius:2px;}
 </style>
 </head>
 <body>
-<div class="layout">
+<div class="wrap">
 
-  <div class="header">
+  <!-- HEADER -->
+  <div class="header full">
     <div>
       <div class="logo">RETRO <span>ARCADE</span> — ADMIN</div>
-      <div style="font-size:9px;color:var(--muted);margin-top:4px;">Solo tú ves esta pantalla</div>
+      <div style="font-size:9px;color:var(--muted);margin-top:3px;">Solo tú ves esta pantalla · <span id="pcLabel" style="color:var(--blue);">0 jugadores</span></div>
     </div>
-    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-      <div class="phase-pill" id="phasePill">⏸ LOBBY</div>
-      <div style="font-family:'Press Start 2P',monospace;font-size:8px;color:var(--muted);" id="playerCountLabel">0 JUGADORES</div>
+    <div style="display:flex;gap:7px;align-items:center;">
+      <div class="pill" id="pill">⏸ LOBBY</div>
     </div>
   </div>
 
-  <!-- IZQUIERDA -->
+  <!-- IZQUIERDA: link + jugadores -->
   <div style="display:flex;flex-direction:column;gap:12px;">
+
     <div class="panel">
-      <div class="ptitle">📎 LINK PARA JUGADORES</div>
+      <div class="pt">📎 LINK JUGADORES</div>
       <div class="link-box">
-        <span class="link-url" id="playerLink">cargando...</span>
-        <button class="copy-btn" onclick="copyLink()">COPIAR</button>
+        <span class="link-url" id="linkUrl">cargando...</span>
+        <button class="cp-btn" onclick="copyLink()">COPIAR</button>
       </div>
-      <div style="font-size:9px;color:var(--muted);">Comparte por WhatsApp antes de iniciar</div>
+      <div style="font-size:9px;color:var(--muted);">Comparte este link por WhatsApp</div>
     </div>
+
     <div class="panel" style="flex:1;">
-      <div class="ptitle">👥 JUGADORES <span class="count-badge" id="playerCount">0</span></div>
-      <div class="p-list" id="playerList"><div class="empty">Esperando jugadores...</div></div>
+      <div class="pt">👥 JUGADORES <span class="badge" id="pcBadge">0</span></div>
+      <div class="plist" id="pList"><div class="empty">Esperando jugadores...</div></div>
     </div>
+
   </div>
 
-  <!-- DERECHA -->
+  <!-- DERECHA: control + ranking -->
   <div style="display:flex;flex-direction:column;gap:12px;">
+
+    <!-- PANEL CONTROL -->
     <div class="panel">
-      <div class="ptitle">🎮 CONTROL</div>
+      <div class="pt">🎮 CONTROL</div>
 
       <!-- LOBBY -->
-      <div id="ctrl-lobby">
-        <div style="font-size:10px;color:var(--muted);margin-bottom:10px;line-height:1.8;">
-          4 juegos · <strong style="color:var(--yellow);">60 seg</strong> cada uno · <strong style="color:var(--pink);">3 vidas</strong> por ronda
+      <div id="c-lobby">
+        <div style="font-size:10px;color:var(--muted);line-height:1.8;margin-bottom:10px;">
+          4 juegos · <strong style="color:var(--yellow);">60 seg</strong> cada uno<br>
+          Jugadores: <strong style="color:var(--pink);">3 vidas</strong> por ronda
         </div>
-        <div class="round-dots" id="dotsLobby" style="margin-bottom:12px;"></div>
+        <div class="dots" id="dots-lobby" style="margin-bottom:10px;"></div>
         <button class="btn btn-green" onclick="adminStart()">▶▶ INICIAR COMPETENCIA</button>
-        <div style="font-size:8px;color:var(--muted);font-family:'Press Start 2P',monospace;text-align:center;margin-top:6px;">Asegúrate de que todos estén conectados</div>
+      </div>
+
+      <!-- COUNTDOWN (solo muestra info) -->
+      <div id="c-count" style="display:none;">
+        <div class="game-now">
+          <span class="gn-em" id="cnt-em">🎮</span>
+          <div><div class="gn-name" id="cnt-name">-</div><div class="gn-sub" id="cnt-sub">Preparando...</div></div>
+        </div>
+        <div style="font-family:'Press Start 2P',monospace;font-size:10px;color:var(--yellow);text-align:center;margin-top:10px;">⏳ CUENTA REGRESIVA...</div>
       </div>
 
       <!-- PLAYING -->
-      <div id="ctrl-playing" style="display:none;">
-        <div class="game-badge">
-          <span class="gb-emoji" id="gbEmoji">🎮</span>
-          <div><div class="gb-name" id="gbName">JUEGO</div><div class="gb-sub" id="gbSub">Ronda 1 de 4</div></div>
+      <div id="c-play" style="display:none;">
+        <div class="game-now">
+          <span class="gn-em" id="play-em">🎮</span>
+          <div><div class="gn-name" id="play-name">-</div><div class="gn-sub" id="play-sub">Ronda 1 de 4</div></div>
         </div>
         <div style="text-align:center;margin:8px 0;">
-          <div class="timer-num" id="timerNum">60</div>
-          <div style="font-size:8px;color:var(--muted);font-family:'Press Start 2P',monospace;">SEGUNDOS</div>
-          <div class="tbar-w"><div class="tbar" id="timerBar"></div></div>
+          <div class="tnum" id="tnum">60</div>
+          <div style="font-size:7px;color:var(--muted);font-family:'Press Start 2P',monospace;">SEGUNDOS</div>
+          <div class="tbar-w"><div class="tbar" id="tbar"></div></div>
         </div>
-        <div class="round-dots" id="dotsPlaying" style="justify-content:center;margin-bottom:8px;"></div>
+        <div class="dots" id="dots-play" style="justify-content:center;margin-bottom:8px;"></div>
         <button class="btn btn-orange" onclick="adminEndRound()">⏹ TERMINAR RONDA YA</button>
       </div>
 
       <!-- RESULTS -->
-      <div id="ctrl-results" style="display:none;">
-        <div style="font-family:'Press Start 2P',monospace;font-size:clamp(8px,2.5vw,12px);color:var(--yellow);text-align:center;margin-bottom:8px;" id="resTitle">RESULTADOS</div>
-        <div id="resNextInfo" style="font-size:10px;color:var(--muted);text-align:center;margin-bottom:10px;"></div>
+      <div id="c-res" style="display:none;">
+        <div style="font-family:'Press Start 2P',monospace;font-size:clamp(8px,2vw,11px);color:var(--yellow);text-align:center;margin-bottom:8px;" id="res-title">RESULTADOS</div>
+        <div id="res-next" style="font-size:10px;color:var(--muted);text-align:center;margin-bottom:10px;"></div>
         <button class="btn btn-yellow" id="nextBtn" onclick="adminNextRound()">▶ SIGUIENTE JUEGO</button>
       </div>
 
       <!-- DONE -->
-      <div id="ctrl-done" style="display:none;">
-        <div style="font-family:'Press Start 2P',monospace;font-size:clamp(8px,2.5vw,11px);color:var(--green);text-align:center;margin-bottom:10px;">🏁 COMPETENCIA TERMINADA</div>
+      <div id="c-done" style="display:none;">
+        <div style="font-family:'Press Start 2P',monospace;font-size:clamp(8px,2vw,10px);color:var(--green);text-align:center;margin-bottom:10px;">🏁 COMPETENCIA TERMINADA</div>
         <button class="btn btn-pink" onclick="adminReset()">🔄 NUEVA COMPETENCIA</button>
       </div>
+
     </div>
 
+    <!-- RANKING -->
     <div class="panel" style="flex:1;">
-      <div class="ptitle" id="rankTitle">🏆 RANKING EN VIVO</div>
-      <div id="rankingList" style="display:flex;flex-direction:column;gap:3px;max-height:280px;overflow-y:auto;">
+      <div class="pt" id="rankTitle">🏆 RANKING EN VIVO</div>
+      <div id="rankList" style="display:flex;flex-direction:column;gap:3px;max-height:260px;overflow-y:auto;">
         <div class="empty">El ranking aparece aquí</div>
       </div>
     </div>
+
   </div>
 
-  <div class="footer">
-    <button class="btn btn-gray" onclick="adminReset()" style="max-width:180px;border:1px solid #333;">🔄 REINICIAR SALA</button>
+  <!-- FOOTER -->
+  <div class="full" style="display:flex;gap:10px;">
+    <button class="btn btn-gray" onclick="adminReset()" style="max-width:160px;">🔄 REINICIAR</button>
   </div>
 
 </div>
 <script>
 const socket = io();
-const GAMES = [{id:0,name:'BREAKOUT',emoji:'🧱'},{id:1,name:'SNAKE',emoji:'🐍'},{id:2,name:'SPACE INV.',emoji:'🚀'},{id:3,name:'TETRIS',emoji:'🟦'}];
-const AV = ['#ff2d78','#00ff88','#ffe600','#00d4ff','#ff6b00','#aa00ff','#ff88cc','#88ffcc'];
-let timerIv = null, timeLeft = 60, curPhase = 'lobby';
+const GAMES = [
+  {id:0,name:'BREAKOUT',emoji:'🧱'},
+  {id:1,name:'SNAKE',emoji:'🐍'},
+  {id:2,name:'SPACE INV.',emoji:'🚀'},
+  {id:3,name:'TETRIS',emoji:'🟦'},
+];
+const AV = ['#ff2d78','#00ff88','#ffe600','#00d4ff','#ff6b00','#aa00ff'];
+let tIv = null, tLeft = 60, phase = 'lobby';
 
+// Link
 window.addEventListener('load', () => {
-  document.getElementById('playerLink').textContent = window.location.origin + '/play';
-  buildDots('dotsLobby'); buildDots('dotsPlaying');
+  document.getElementById('linkUrl').textContent = window.location.origin + '/play';
+  buildDots();
 });
 
 function copyLink() {
   navigator.clipboard.writeText(window.location.origin + '/play').then(() => {
-    const b = document.querySelector('.copy-btn');
+    const b = document.querySelector('.cp-btn');
     b.textContent = '✓ OK'; b.style.background = '#ffe600';
     setTimeout(() => { b.textContent = 'COPIAR'; b.style.background = ''; }, 2000);
   });
 }
 
-function buildDots(id) {
-  const el = document.getElementById(id); if (!el) return; el.innerHTML = '';
-  GAMES.forEach((g, i) => {
-    const d = document.createElement('div'); d.className = 'rdot'; d.id = id + '_' + i; d.title = g.name; el.appendChild(d);
+function buildDots() {
+  ['dots-lobby','dots-play'].forEach(id => {
+    const el = document.getElementById(id); if (!el) return; el.innerHTML = '';
+    GAMES.forEach((g, i) => {
+      const d = document.createElement('div'); d.className = 'dot';
+      d.id = id + '_' + i; d.title = g.name; el.appendChild(d);
+    });
   });
 }
-function updateDots(idx) {
-  ['dotsLobby','dotsPlaying'].forEach(id => {
+function setDots(idx) {
+  ['dots-lobby','dots-play'].forEach(id => {
     GAMES.forEach((_, i) => {
       const d = document.getElementById(id + '_' + i); if (!d) return;
-      d.className = 'rdot' + (i < idx ? ' done' : i === idx ? ' active' : '');
+      d.className = 'dot' + (i < idx ? ' done' : i === idx ? ' active' : '');
     });
   });
 }
 
-function showPhase(p) {
-  curPhase = p;
-  ['lobby','playing','results','done'].forEach(x => document.getElementById('ctrl-'+x).style.display = p===x?'block':'none');
-  const pill = document.getElementById('phasePill');
-  const map = {lobby:'⏸ LOBBY', countdown:'⏳ CUENTA...', playing:'🟢 JUGANDO', results:'📊 RESULTADOS', done:'🏁 TERMINADO'};
+// Panel switching — SOLO muestra el panel correcto, nada más
+function showPanel(p) {
+  phase = p;
+  ['lobby','count','play','res','done'].forEach(x =>
+    document.getElementById('c-' + x).style.display = p === x ? 'block' : 'none'
+  );
+  const pill = document.getElementById('pill');
+  const map = {lobby:'⏸ LOBBY', count:'⏳ CONTANDO', play:'🟢 JUGANDO', res:'📊 RESULTADOS', done:'🏁 TERMINADO'};
   pill.textContent = map[p] || p;
-  pill.className = 'phase-pill' + (p==='playing'?' playing':p==='results'?' results':'');
+  pill.className = 'pill' + (p==='play'?' on':p==='res'?' res':'');
 }
 
 function adminStart()     { socket.emit('admin_start'); }
@@ -198,100 +228,116 @@ function adminNextRound() { socket.emit('admin_next_round'); }
 function adminEndRound()  { socket.emit('admin_end_round'); }
 function adminReset()     { socket.emit('admin_reset'); }
 
-socket.on('state_update', ({ players, playerCount, phase }) => {
-  document.getElementById('playerCount').textContent = playerCount;
-  document.getElementById('playerCountLabel').textContent = `${playerCount} JUGADOR${playerCount!==1?'ES':''}`;
-  updatePlayerList(players);
-  if (phase === 'lobby') showPhase('lobby');
+// SOCKET EVENTS
+socket.on('state_update', ({ players, playerCount, phase: ph }) => {
+  document.getElementById('pcBadge').textContent = playerCount;
+  document.getElementById('pcLabel').textContent = `${playerCount} jugador${playerCount !== 1 ? 'es' : ''} conectado${playerCount !== 1 ? 's' : ''}`;
+  renderPlayers(players);
+  if (ph === 'lobby') showPanel('lobby');
 });
 
 socket.on('round_countdown', ({ game, roundNum, totalGames }) => {
-  showPhase('countdown');
-  document.getElementById('gbEmoji').textContent = game.emoji;
-  document.getElementById('gbName').textContent = game.name;
-  document.getElementById('gbSub').textContent = `Ronda ${roundNum} de ${totalGames}`;
-  updateDots(roundNum - 1);
-  setTimeout(() => { if (curPhase === 'countdown') showPhase('playing'); }, 4000);
+  showPanel('count');
+  document.getElementById('cnt-em').textContent = game.emoji;
+  document.getElementById('cnt-name').textContent = game.name;
+  document.getElementById('cnt-sub').textContent = `Ronda ${roundNum} de ${totalGames}`;
+  setDots(roundNum - 1);
 });
 
 socket.on('round_start', ({ game, duration, roundNum, totalGames }) => {
-  showPhase('playing');
-  document.getElementById('gbEmoji').textContent = game.emoji;
-  document.getElementById('gbName').textContent = game.name;
-  document.getElementById('gbSub').textContent = `Ronda ${roundNum} de ${totalGames}`;
-  updateDots(roundNum - 1);
+  showPanel('play');
+  document.getElementById('play-em').textContent = game.emoji;
+  document.getElementById('play-name').textContent = game.name;
+  document.getElementById('play-sub').textContent = `Ronda ${roundNum} de ${totalGames}`;
+  setDots(roundNum - 1);
   startTimer(duration);
 });
 
-socket.on('live_ranking', r => updateRanking(r));
+socket.on('live_ranking', r => renderRanking(r));
 
 socket.on('round_end', ({ game, ranking, nextGame, isLast, roundNum, totalGames }) => {
-  clearInterval(timerIv);
-  showPhase('results');
-  updateRanking(ranking, true);
-  document.getElementById('resTitle').textContent = `RONDA ${roundNum}/${totalGames} — ${game.name}`;
-  document.getElementById('resNextInfo').textContent = isLast ? 'Última ronda completada' : `Siguiente: ${nextGame.emoji} ${nextGame.name}`;
-  document.getElementById('nextBtn').textContent = isLast ? '🏁 VER FINAL' : '▶ SIGUIENTE JUEGO';
+  clearInterval(tIv);
+  showPanel('res');
+  renderRanking(ranking, true);
+  document.getElementById('res-title').textContent = `RONDA ${roundNum}/${totalGames} — ${game.name}`;
+  document.getElementById('res-next').textContent = isLast
+    ? '✅ Última ronda completada'
+    : `Siguiente: ${nextGame.emoji} ${nextGame.name}`;
+  document.getElementById('nextBtn').textContent = isLast ? '🏁 VER RESULTADO FINAL' : '▶ SIGUIENTE JUEGO';
 });
 
 socket.on('competition_end', ({ ranking }) => {
-  showPhase('done'); updateRanking(ranking, true); clearInterval(timerIv);
-  document.getElementById('rankTitle').textContent = '🏆 RESULTADO FINAL';
+  clearInterval(tIv);
+  showPanel('done');
+  renderRanking(ranking, true);
+  document.getElementById('rankTitle').textContent = '🏆 CAMPEÓN FINAL';
 });
 
 socket.on('room_reset', () => {
-  showPhase('lobby'); clearInterval(timerIv); updateDots(-1);
-  document.getElementById('rankingList').innerHTML = '<div class="empty">El ranking aparece aquí</div>';
+  clearInterval(tIv);
+  showPanel('lobby');
+  setDots(-1);
+  document.getElementById('rankList').innerHTML = '<div class="empty">El ranking aparece aquí</div>';
   document.getElementById('rankTitle').textContent = '🏆 RANKING EN VIVO';
 });
 
-function updatePlayerList(players) {
-  const list = document.getElementById('playerList');
-  if (!players || !players.length) { list.innerHTML = '<div class="empty">Esperando jugadores...</div>'; return; }
+// Render players
+function renderPlayers(players) {
+  const list = document.getElementById('pList');
+  if (!players || !players.length) {
+    list.innerHTML = '<div class="empty">Esperando jugadores...</div>'; return;
+  }
+  // Update existing or add new
   const existing = {};
-  list.querySelectorAll('[data-name]').forEach(el => existing[el.dataset.name] = el);
+  list.querySelectorAll('[data-n]').forEach(el => existing[el.dataset.n] = el);
   const names = new Set(players.map(p => p.name));
   Object.keys(existing).forEach(n => { if (!names.has(n)) existing[n].remove(); });
   players.forEach((p, i) => {
     const col = AV[i % AV.length], init = (p.name||'?').slice(0,2);
-    const hearts = '❤️'.repeat(Math.max(0, p.lives||0)) + '🖤'.repeat(Math.max(0, 3-(p.lives||0)));
+    const hearts = '❤️'.repeat(Math.max(0,p.lives||0)) + '🖤'.repeat(Math.max(0,3-(p.lives||0)));
     if (existing[p.name]) {
-      existing[p.name].querySelector('.p-score').textContent = p.score || 0;
-      existing[p.name].querySelector('.p-lives').textContent = hearts;
+      existing[p.name].querySelector('.psc').textContent = p.score || 0;
+      existing[p.name].querySelector('.plv').textContent = hearts;
     } else {
-      const row = document.createElement('div'); row.className = 'p-row'; row.dataset.name = p.name;
-      row.innerHTML = `<div class="p-av" style="background:${col}22;border:1px solid ${col};color:${col}">${init}</div>
-        <span class="p-name">${p.name}</span><span class="p-lives">${hearts}</span><span class="p-score">${p.score||0}</span>`;
+      const row = document.createElement('div'); row.className = 'prow'; row.dataset.n = p.name;
+      row.innerHTML = `<div class="pav" style="background:${col}22;border:1px solid ${col};color:${col}">${init}</div>
+        <span class="pnm">${p.name}</span>
+        <span class="plv">${hearts}</span>
+        <span class="psc">${p.score||0}</span>`;
       list.appendChild(row);
     }
   });
 }
 
-function updateRanking(ranking, final = false) {
-  const list = document.getElementById('rankingList');
-  if (!ranking || !ranking.length) { list.innerHTML = '<div class="empty">Sin jugadores</div>'; return; }
-  const medals = ['🥇','🥈','🥉'];
+// Render ranking
+function renderRanking(ranking, final = false) {
+  const list = document.getElementById('rankList');
+  if (!ranking || !ranking.length) { list.innerHTML = '<div class="empty">Sin jugadores aún</div>'; return; }
+  const M = ['🥇','🥈','🥉'];
   list.innerHTML = ranking.map((r, i) => `
-    <div class="r-row ${['r1','r2','r3'][i]||'rn'}">
-      <span class="r-rank">${i<3?medals[i]:'#'+(i+1)}</span>
-      <span class="r-name" style="${i===0?'color:var(--yellow)':''}">${r.name}</span>
-      <span class="r-score">${r.score}</span>
+    <div class="rrow ${['r1','r2','r3'][i]||'rn'}">
+      <span class="rrk">${i < 3 ? M[i] : '#'+(i+1)}</span>
+      <span class="rnm" style="${i===0?'color:var(--yellow)':''}">${r.name}</span>
+      <span class="rsc">${r.score}</span>
     </div>`).join('');
+  if (final) document.getElementById('rankTitle').textContent = '🏆 RESULTADO FINAL';
 }
 
-function startTimer(duration) {
-  timeLeft = duration; clearInterval(timerIv);
-  document.getElementById('timerNum').textContent = duration;
-  document.getElementById('timerBar').style.cssText = 'width:100%;background:var(--green)';
-  timerIv = setInterval(() => {
-    timeLeft--;
-    document.getElementById('timerNum').textContent = Math.max(0, timeLeft);
-    const pct = Math.max(0, (timeLeft / duration) * 100);
-    const bar = document.getElementById('timerBar');
-    bar.style.width = pct + '%';
+// Timer
+function startTimer(dur) {
+  tLeft = dur; clearInterval(tIv);
+  document.getElementById('tnum').textContent = dur;
+  document.getElementById('tbar').style.cssText = 'width:100%;background:var(--green)';
+  tIv = setInterval(() => {
+    tLeft--;
+    const n = Math.max(0, tLeft);
+    document.getElementById('tnum').textContent = n;
+    const pct = (tLeft / dur) * 100;
+    const bar = document.getElementById('tbar');
+    bar.style.width = Math.max(0,pct) + '%';
     if (pct < 30) bar.style.background = 'var(--pink)';
     else if (pct < 60) bar.style.background = 'var(--yellow)';
-    if (timeLeft <= 0) clearInterval(timerIv);
+    if (tLeft <= 0) clearInterval(tIv);
   }, 1000);
 }
 </script>
