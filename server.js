@@ -65,10 +65,11 @@ function launchRound(idx) {
     state.players[id].lives = livesForRound;
     state.players[id].alive = true;
   });
-  io.emit('round_countdown', {
-    gameIdx: idx, game: GAMES[idx],
-    totalGames: GAMES.length, roundNum: idx + 1,
-  });
+  io.emit('round_start', {
+      gameIdx: idx, game: GAMES[idx],
+      duration: ROUND_SECS, roundNum: idx + 1, totalGames: GAMES.length,
+      livesCount: idx === 3 ? 1 : 3,
+    });
   broadcastState();
   setTimeout(() => {
     state.phase = 'playing';
