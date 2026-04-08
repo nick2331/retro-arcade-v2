@@ -65,7 +65,7 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 
 /* ── MOBILE CONTROLS — always visible on touch ── */
 .mob{display:none;flex-direction:column;gap:4px;width:100%;max-width:300px;flex-shrink:0;position:relative;z-index:3;}
-@media(hover:none)and(pointer:coarse){.mob{display:flex;}}
+@media(max-width:768px){.mob{display:flex;}}
 .mob-row{display:flex;gap:4px;justify-content:center;}
 .mb{background:rgba(0,212,255,.12);border:2px solid rgba(0,212,255,.45);color:var(--blue);
   font-size:22px;border-radius:5px;cursor:pointer;
