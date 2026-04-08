@@ -7,317 +7,261 @@
 <script src="/socket.io/socket.io.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Share+Tech+Mono&display=swap');
-:root{
-  --black:#0a0a0f;--dark:#12121a;--card:#1a1a28;
-  --green:#00ff88;--yellow:#ffe600;--pink:#ff2d78;--blue:#00d4ff;--orange:#ff6b00;
-  --muted:#6666aa;--pixel:'Press Start 2P',monospace;--mono:'Share Tech Mono',monospace;
-}
+:root{--black:#0a0a0f;--dark:#12121a;--card:#1a1a28;--green:#00ff88;--yellow:#ffe600;--pink:#ff2d78;--blue:#00d4ff;--orange:#ff6b00;--muted:#6666aa;}
 *{box-sizing:border-box;margin:0;padding:0;}
-body{background:var(--black);color:#e0e0f0;font-family:var(--mono);min-height:100vh;}
+body{background:var(--black);color:#e0e0f0;font-family:'Share Tech Mono',monospace;min-height:100vh;}
 body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.07) 2px,rgba(0,0,0,.07) 4px);pointer-events:none;z-index:999;}
-
-/* LAYOUT */
-.admin-layout{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto 1fr auto;gap:14px;padding:16px;max-width:1200px;margin:0 auto;min-height:100vh;}
-@media(max-width:700px){.admin-layout{grid-template-columns:1fr;}}
-
-/* HEADER */
-.header{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
-.logo{font-family:var(--pixel);font-size:clamp(11px,2.5vw,18px);color:var(--pink);text-shadow:0 0 14px var(--pink);}
-.logo span{color:var(--yellow);text-shadow:0 0 14px var(--yellow);}
-.status-pill{font-family:var(--pixel);font-size:9px;padding:7px 14px;border-radius:20px;background:var(--dark);border:1px solid var(--muted);}
-.status-pill.active{border-color:var(--green);color:var(--green);box-shadow:0 0 10px rgba(0,255,136,.3);}
-.status-pill.idle{border-color:var(--muted);color:var(--muted);}
-
-/* CARD */
-.panel{background:var(--card);border:1.5px solid var(--blue);border-radius:6px;padding:18px;display:flex;flex-direction:column;gap:12px;box-shadow:0 0 16px rgba(0,212,255,.1);}
-.panel-title{font-family:var(--pixel);font-size:clamp(8px,2vw,11px);color:var(--blue);letter-spacing:2px;border-bottom:1px solid rgba(0,212,255,.2);padding-bottom:10px;}
-
-/* GAME BUTTONS */
-.game-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-.game-btn{background:var(--dark);border:1.5px solid var(--muted);border-radius:4px;padding:12px 8px;cursor:pointer;text-align:center;transition:all .2s;font-family:var(--pixel);}
-.game-btn:hover{border-color:var(--yellow);transform:translateY(-2px);}
-.game-btn.selected{border-color:var(--yellow);background:rgba(255,230,0,.08);box-shadow:0 0 14px rgba(255,230,0,.3);}
-.game-btn-emoji{font-size:clamp(22px,4vw,32px);display:block;margin-bottom:6px;}
-.game-btn-name{font-size:clamp(7px,1.8vw,9px);color:var(--yellow);display:block;margin-bottom:3px;}
-.game-btn-desc{font-size:9px;color:var(--muted);}
-
-/* BUTTONS */
-.btn{font-family:var(--pixel);font-size:clamp(8px,2vw,11px);padding:13px 20px;border:none;cursor:pointer;border-radius:3px;width:100%;letter-spacing:1px;transition:filter .15s,transform .1s;}
+.layout{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:14px;max-width:1100px;margin:0 auto;}
+@media(max-width:680px){.layout{grid-template-columns:1fr;}}
+.header{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding-bottom:10px;border-bottom:1px solid rgba(0,212,255,.2);}
+.logo{font-family:'Press Start 2P',monospace;font-size:clamp(10px,2.5vw,16px);color:var(--pink);text-shadow:0 0 12px var(--pink);}
+.logo span{color:var(--yellow);}
+.phase-pill{font-family:'Press Start 2P',monospace;font-size:8px;padding:6px 12px;border-radius:14px;border:1px solid var(--muted);color:var(--muted);}
+.phase-pill.playing{border-color:var(--green);color:var(--green);box-shadow:0 0 10px rgba(0,255,136,.3);}
+.phase-pill.results{border-color:var(--yellow);color:var(--yellow);}
+.panel{background:var(--card);border:1.5px solid rgba(0,212,255,.3);border-radius:6px;padding:16px;display:flex;flex-direction:column;gap:10px;}
+.ptitle{font-family:'Press Start 2P',monospace;font-size:clamp(7px,2vw,10px);color:var(--blue);letter-spacing:2px;padding-bottom:8px;border-bottom:1px solid rgba(0,212,255,.15);}
+.link-box{background:var(--dark);border:1px solid var(--green);border-radius:3px;padding:9px 12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.link-url{font-size:clamp(11px,2.5vw,14px);color:var(--green);flex:1;word-break:break-all;}
+.copy-btn{font-family:'Press Start 2P',monospace;font-size:7px;padding:5px 9px;background:var(--green);color:var(--black);border:none;border-radius:2px;cursor:pointer;white-space:nowrap;}
+.btn{font-family:'Press Start 2P',monospace;font-size:clamp(8px,2vw,11px);padding:14px 20px;border:none;cursor:pointer;border-radius:3px;width:100%;letter-spacing:1px;transition:filter .15s,transform .1s;}
 .btn:active{transform:scale(.97);}
-.btn-green{background:var(--green);color:var(--black);box-shadow:0 0 14px rgba(0,255,136,.4);}
+.btn-green{background:var(--green);color:var(--black);box-shadow:0 0 16px rgba(0,255,136,.4);}
 .btn-green:hover{filter:brightness(1.15);}
-.btn-pink{background:var(--pink);color:white;box-shadow:0 0 14px rgba(255,45,120,.4);}
-.btn-pink:hover{filter:brightness(1.15);}
+.btn-pink{background:var(--pink);color:white;box-shadow:0 0 16px rgba(255,45,120,.4);}
 .btn-yellow{background:var(--yellow);color:var(--black);}
-.btn-gray{background:#2a2a3a;color:#777;cursor:not-allowed;}
 .btn-orange{background:var(--orange);color:white;}
-
-/* PLAYER LIST */
-.player-list{display:flex;flex-direction:column;gap:6px;max-height:320px;overflow-y:auto;}
-.player-row{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--dark);border:1px solid rgba(0,212,255,.15);border-radius:4px;transition:all .3s;}
-.player-row.new-anim{animation:pop .4s ease;}
-@keyframes pop{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
-.p-avatar{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--pixel);font-size:10px;flex-shrink:0;}
-.p-name{font-family:var(--pixel);font-size:clamp(8px,2vw,10px);flex:1;}
-.p-score{font-family:var(--pixel);font-size:clamp(9px,2vw,12px);color:var(--green);min-width:60px;text-align:right;}
-.p-rank{font-size:14px;min-width:22px;}
-.empty-msg{text-align:center;color:var(--muted);font-size:11px;padding:20px;font-family:var(--pixel);}
-
-/* RANKING */
-.ranking-row{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:4px;margin:3px 0;transition:all .4s;}
-.ranking-row.r1{background:rgba(255,230,0,.12);border:1px solid var(--yellow);}
-.ranking-row.r2{background:rgba(192,192,192,.08);border:1px solid #888;}
-.ranking-row.r3{background:rgba(205,127,50,.08);border:1px solid #cd7f32;}
-.ranking-row.rn{background:var(--dark);border:1px solid rgba(255,255,255,.05);}
-.rank-num{font-family:var(--pixel);font-size:12px;min-width:28px;}
-.rank-name{font-family:var(--pixel);font-size:clamp(7px,2vw,10px);flex:1;}
-.rank-score{font-family:var(--pixel);font-size:clamp(10px,2vw,13px);color:var(--green);text-shadow:0 0 8px var(--green);}
-
-/* TIMER */
-.game-timer{text-align:center;}
-.timer-num{font-family:var(--pixel);font-size:clamp(32px,8vw,56px);color:var(--pink);text-shadow:0 0 20px var(--pink);}
-.timer-bar-wrap{height:10px;background:var(--dark);border-radius:3px;overflow:hidden;margin-top:8px;border:1px solid var(--muted);}
-.timer-bar{height:100%;background:var(--green);transition:width .25s linear,background .5s;}
-.current-game-badge{display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(255,230,0,.08);border:1px solid var(--yellow);border-radius:4px;}
-.cg-emoji{font-size:24px;}
-.cg-name{font-family:var(--pixel);font-size:clamp(9px,2.5vw,13px);color:var(--yellow);}
-
-/* BOTTOM */
-.footer{grid-column:1/-1;display:flex;gap:10px;flex-wrap:wrap;}
-.footer .btn{max-width:240px;}
-
-/* LINK BOX */
-.link-box{background:var(--dark);border:1px solid var(--green);border-radius:4px;padding:10px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
-.link-url{font-family:var(--mono);font-size:clamp(10px,2.5vw,14px);color:var(--green);flex:1;word-break:break-all;}
-.copy-btn{font-family:var(--pixel);font-size:8px;padding:6px 10px;background:var(--green);color:var(--black);border:none;border-radius:2px;cursor:pointer;}
-.copy-btn:active{filter:brightness(.8);}
-
-/* COUNTER BADGE */
-.count-badge{font-family:var(--pixel);font-size:10px;background:var(--blue);color:var(--black);padding:3px 8px;border-radius:10px;margin-left:6px;}
-
-::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-track{background:var(--dark);}::-webkit-scrollbar-thumb{background:var(--blue);border-radius:3px;}
+.btn-gray{background:#2a2a3a;color:#666;}
+.game-badge{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:4px;border:1.5px solid var(--yellow);background:rgba(255,230,0,.06);}
+.gb-emoji{font-size:clamp(24px,5vw,36px);}
+.gb-name{font-family:'Press Start 2P',monospace;font-size:clamp(10px,2.5vw,15px);color:var(--yellow);}
+.gb-sub{font-size:10px;color:var(--muted);margin-top:3px;}
+.round-dots{display:flex;gap:6px;align-items:center;}
+.rdot{width:12px;height:12px;border-radius:50%;background:var(--dark);border:1.5px solid var(--muted);transition:all .3s;}
+.rdot.done{background:var(--green);border-color:var(--green);}
+.rdot.active{background:var(--yellow);border-color:var(--yellow);box-shadow:0 0 8px rgba(255,230,0,.5);}
+.timer-num{font-family:'Press Start 2P',monospace;font-size:clamp(36px,8vw,58px);color:var(--pink);text-shadow:0 0 20px var(--pink);text-align:center;}
+.tbar-w{height:10px;background:var(--dark);border-radius:3px;overflow:hidden;margin-top:8px;}
+.tbar{height:100%;background:var(--green);transition:width 1s linear,background .5s;width:100%;}
+.p-row{display:flex;align-items:center;gap:9px;padding:8px 11px;background:var(--dark);border:1px solid rgba(255,255,255,.05);border-radius:3px;transition:all .3s;}
+.p-av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Press Start 2P',monospace;font-size:9px;flex-shrink:0;}
+.p-name{font-family:'Press Start 2P',monospace;font-size:clamp(7px,2vw,9px);flex:1;}
+.p-lives{font-size:12px;letter-spacing:-2px;}
+.p-score{font-family:'Press Start 2P',monospace;font-size:clamp(9px,2vw,12px);color:var(--green);min-width:50px;text-align:right;}
+.p-list{display:flex;flex-direction:column;gap:5px;max-height:300px;overflow-y:auto;}
+.r-row{display:flex;align-items:center;gap:9px;padding:8px 11px;border-radius:3px;margin:3px 0;transition:all .4s;}
+.r-row.r1{background:rgba(255,230,0,.1);border:1px solid var(--yellow);}
+.r-row.r2{background:rgba(192,192,192,.06);border:1px solid #888;}
+.r-row.r3{background:rgba(205,127,50,.06);border:1px solid #cd7f32;}
+.r-row.rn{background:var(--dark);border:1px solid rgba(255,255,255,.04);}
+.r-rank{font-family:'Press Start 2P',monospace;font-size:11px;min-width:26px;}
+.r-name{font-family:'Press Start 2P',monospace;font-size:clamp(7px,2vw,9px);flex:1;}
+.r-score{font-family:'Press Start 2P',monospace;font-size:clamp(9px,2vw,12px);color:var(--green);}
+.footer{grid-column:1/-1;display:flex;gap:10px;}
+.empty{text-align:center;color:var(--muted);font-size:10px;padding:16px;font-family:'Press Start 2P',monospace;}
+.count-badge{font-family:'Press Start 2P',monospace;font-size:9px;background:var(--blue);color:var(--black);padding:2px 7px;border-radius:10px;margin-left:5px;}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:var(--dark);}::-webkit-scrollbar-thumb{background:var(--blue);border-radius:2px;}
 </style>
 </head>
 <body>
-<div class="admin-layout">
+<div class="layout">
 
-  <!-- HEADER -->
   <div class="header">
     <div>
-      <div class="logo">RETRO <span>ARCADE</span> — PANEL ADMIN</div>
-      <div style="font-size:10px;color:var(--muted);margin-top:5px;font-family:var(--mono);">Solo tú ves esta pantalla</div>
+      <div class="logo">RETRO <span>ARCADE</span> — ADMIN</div>
+      <div style="font-size:9px;color:var(--muted);margin-top:4px;">Solo tú ves esta pantalla</div>
     </div>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-      <div class="status-pill idle" id="statusPill">⏸ EN ESPERA</div>
-      <div style="font-family:var(--pixel);font-size:9px;color:var(--muted);" id="playerCountBadge">0 JUGADORES</div>
+      <div class="phase-pill" id="phasePill">⏸ LOBBY</div>
+      <div style="font-family:'Press Start 2P',monospace;font-size:8px;color:var(--muted);" id="playerCountLabel">0 JUGADORES</div>
     </div>
   </div>
 
-  <!-- PANEL IZQUIERDO: Jugadores + Link -->
-  <div style="display:flex;flex-direction:column;gap:14px;">
-
-    <!-- Link para compartir -->
+  <!-- IZQUIERDA -->
+  <div style="display:flex;flex-direction:column;gap:12px;">
     <div class="panel">
-      <div class="panel-title">📎 LINK PARA JUGADORES</div>
+      <div class="ptitle">📎 LINK PARA JUGADORES</div>
       <div class="link-box">
-        <span class="link-url" id="playerLink">Cargando...</span>
+        <span class="link-url" id="playerLink">cargando...</span>
         <button class="copy-btn" onclick="copyLink()">COPIAR</button>
       </div>
-      <div style="font-size:10px;color:var(--muted);">Comparte este link con tus jugadores por WhatsApp, etc.</div>
+      <div style="font-size:9px;color:var(--muted);">Comparte por WhatsApp antes de iniciar</div>
     </div>
-
-    <!-- Jugadores conectados -->
     <div class="panel" style="flex:1;">
-      <div class="panel-title">
-        👥 JUGADORES CONECTADOS
-        <span class="count-badge" id="playerCount">0</span>
-      </div>
-      <div class="player-list" id="playerList">
-        <div class="empty-msg">Esperando jugadores...</div>
-      </div>
+      <div class="ptitle">👥 JUGADORES <span class="count-badge" id="playerCount">0</span></div>
+      <div class="p-list" id="playerList"><div class="empty">Esperando jugadores...</div></div>
     </div>
   </div>
 
-  <!-- PANEL DERECHO: Control + Ranking -->
-  <div style="display:flex;flex-direction:column;gap:14px;">
+  <!-- DERECHA -->
+  <div style="display:flex;flex-direction:column;gap:12px;">
+    <div class="panel">
+      <div class="ptitle">🎮 CONTROL</div>
 
-    <!-- Control de juego -->
-    <div class="panel" id="controlPanel">
-      <div class="panel-title">🎮 CONTROL DEL JUEGO</div>
-
-      <!-- Estado: idle -->
-      <div id="idleControls">
-        <div style="font-size:10px;color:var(--muted);margin-bottom:10px;">Elige un juego y da inicio:</div>
-        <div class="game-grid" id="gameGrid"></div>
-        <button class="btn btn-gray" id="startBtn" onclick="startGame()" style="margin-top:10px;" disabled>
-          ▶▶ INICIAR JUEGO
-        </button>
+      <!-- LOBBY -->
+      <div id="ctrl-lobby">
+        <div style="font-size:10px;color:var(--muted);margin-bottom:10px;line-height:1.8;">
+          4 juegos · <strong style="color:var(--yellow);">60 seg</strong> cada uno · <strong style="color:var(--pink);">3 vidas</strong> por ronda
+        </div>
+        <div class="round-dots" id="dotsLobby" style="margin-bottom:12px;"></div>
+        <button class="btn btn-green" onclick="adminStart()">▶▶ INICIAR COMPETENCIA</button>
+        <div style="font-size:8px;color:var(--muted);font-family:'Press Start 2P',monospace;text-align:center;margin-top:6px;">Asegúrate de que todos estén conectados</div>
       </div>
 
-      <!-- Estado: en juego -->
-      <div id="activeControls" style="display:none;">
-        <div class="current-game-badge" id="currentGameBadge">
-          <span class="cg-emoji" id="cgEmoji">🎮</span>
-          <div><div class="cg-name" id="cgName">JUEGO</div><div style="font-size:9px;color:var(--muted);">En progreso</div></div>
+      <!-- PLAYING -->
+      <div id="ctrl-playing" style="display:none;">
+        <div class="game-badge">
+          <span class="gb-emoji" id="gbEmoji">🎮</span>
+          <div><div class="gb-name" id="gbName">JUEGO</div><div class="gb-sub" id="gbSub">Ronda 1 de 4</div></div>
         </div>
-        <div class="game-timer">
+        <div style="text-align:center;margin:8px 0;">
           <div class="timer-num" id="timerNum">60</div>
-          <div style="font-size:9px;color:var(--muted);font-family:var(--pixel);margin-top:4px;">SEGUNDOS</div>
-          <div class="timer-bar-wrap"><div class="timer-bar" id="timerBar"></div></div>
+          <div style="font-size:8px;color:var(--muted);font-family:'Press Start 2P',monospace;">SEGUNDOS</div>
+          <div class="tbar-w"><div class="tbar" id="timerBar"></div></div>
         </div>
-        <button class="btn btn-orange" onclick="endGameNow()" style="margin-top:4px;">⏹ TERMINAR AHORA</button>
+        <div class="round-dots" id="dotsPlaying" style="justify-content:center;margin-bottom:8px;"></div>
+        <button class="btn btn-orange" onclick="adminEndRound()">⏹ TERMINAR RONDA YA</button>
+      </div>
+
+      <!-- RESULTS -->
+      <div id="ctrl-results" style="display:none;">
+        <div style="font-family:'Press Start 2P',monospace;font-size:clamp(8px,2.5vw,12px);color:var(--yellow);text-align:center;margin-bottom:8px;" id="resTitle">RESULTADOS</div>
+        <div id="resNextInfo" style="font-size:10px;color:var(--muted);text-align:center;margin-bottom:10px;"></div>
+        <button class="btn btn-yellow" id="nextBtn" onclick="adminNextRound()">▶ SIGUIENTE JUEGO</button>
+      </div>
+
+      <!-- DONE -->
+      <div id="ctrl-done" style="display:none;">
+        <div style="font-family:'Press Start 2P',monospace;font-size:clamp(8px,2.5vw,11px);color:var(--green);text-align:center;margin-bottom:10px;">🏁 COMPETENCIA TERMINADA</div>
+        <button class="btn btn-pink" onclick="adminReset()">🔄 NUEVA COMPETENCIA</button>
       </div>
     </div>
 
-    <!-- Ranking en vivo -->
     <div class="panel" style="flex:1;">
-      <div class="panel-title">🏆 RANKING EN VIVO</div>
-      <div id="rankingList" style="display:flex;flex-direction:column;gap:4px;max-height:300px;overflow-y:auto;">
-        <div class="empty-msg">El ranking aparece aquí durante el juego</div>
+      <div class="ptitle" id="rankTitle">🏆 RANKING EN VIVO</div>
+      <div id="rankingList" style="display:flex;flex-direction:column;gap:3px;max-height:280px;overflow-y:auto;">
+        <div class="empty">El ranking aparece aquí</div>
       </div>
     </div>
   </div>
 
-  <!-- FOOTER -->
   <div class="footer">
-    <button class="btn btn-gray" onclick="resetRoom()" style="max-width:200px;">🔄 REINICIAR SALA</button>
+    <button class="btn btn-gray" onclick="adminReset()" style="max-width:180px;border:1px solid #333;">🔄 REINICIAR SALA</button>
   </div>
 
 </div>
-
 <script>
 const socket = io();
-let selectedGame = -1;
-let timerInterval = null;
-let timeLeft = 60;
-const GAMES = [
-  { id:0, name:'BREAKOUT',   emoji:'🧱', desc:'Rompe los bloques' },
-  { id:1, name:'SNAKE',      emoji:'🐍', desc:'Come sin chocar' },
-  { id:2, name:'SPACE INV.', emoji:'🚀', desc:'Destruye aliens' },
-  { id:3, name:'TETRIS',     emoji:'🟦', desc:'Completa líneas' },
-];
-const avatarColors = ['#ff2d78','#00ff88','#ffe600','#00d4ff','#ff6b00','#aa00ff','#ff88cc','#88ffcc'];
+const GAMES = [{id:0,name:'BREAKOUT',emoji:'🧱'},{id:1,name:'SNAKE',emoji:'🐍'},{id:2,name:'SPACE INV.',emoji:'🚀'},{id:3,name:'TETRIS',emoji:'🟦'}];
+const AV = ['#ff2d78','#00ff88','#ffe600','#00d4ff','#ff6b00','#aa00ff','#ff88cc','#88ffcc'];
+let timerIv = null, timeLeft = 60, curPhase = 'lobby';
 
-// ── Link ──
 window.addEventListener('load', () => {
-  const base = window.location.origin;
-  document.getElementById('playerLink').textContent = base + '/play';
+  document.getElementById('playerLink').textContent = window.location.origin + '/play';
+  buildDots('dotsLobby'); buildDots('dotsPlaying');
 });
+
 function copyLink() {
-  const url = window.location.origin + '/play';
-  navigator.clipboard.writeText(url).then(() => {
-    const btn = document.querySelector('.copy-btn');
-    btn.textContent = '✓ COPIADO'; btn.style.background = '#ffe600';
-    setTimeout(() => { btn.textContent = 'COPIAR'; btn.style.background = ''; }, 2000);
+  navigator.clipboard.writeText(window.location.origin + '/play').then(() => {
+    const b = document.querySelector('.copy-btn');
+    b.textContent = '✓ OK'; b.style.background = '#ffe600';
+    setTimeout(() => { b.textContent = 'COPIAR'; b.style.background = ''; }, 2000);
   });
 }
 
-// ── Build game grid ──
-const grid = document.getElementById('gameGrid');
-GAMES.forEach(g => {
-  const d = document.createElement('div');
-  d.className = 'game-btn'; d.id = 'gbtn' + g.id;
-  d.innerHTML = `<span class="game-btn-emoji">${g.emoji}</span><span class="game-btn-name">${g.name}</span><span class="game-btn-desc">${g.desc}</span>`;
-  d.onclick = () => selectGame(g.id);
-  grid.appendChild(d);
-});
-
-function selectGame(id) {
-  selectedGame = id;
-  document.querySelectorAll('.game-btn').forEach(b => b.classList.remove('selected'));
-  document.getElementById('gbtn' + id).classList.add('selected');
-  socket.emit('admin_select_game', { gameId: id });
-  const btn = document.getElementById('startBtn');
-  btn.disabled = false; btn.className = 'btn btn-pink'; btn.style.marginTop = '10px';
-  btn.textContent = `▶▶ INICIAR ${GAMES[id].name}`;
+function buildDots(id) {
+  const el = document.getElementById(id); if (!el) return; el.innerHTML = '';
+  GAMES.forEach((g, i) => {
+    const d = document.createElement('div'); d.className = 'rdot'; d.id = id + '_' + i; d.title = g.name; el.appendChild(d);
+  });
+}
+function updateDots(idx) {
+  ['dotsLobby','dotsPlaying'].forEach(id => {
+    GAMES.forEach((_, i) => {
+      const d = document.getElementById(id + '_' + i); if (!d) return;
+      d.className = 'rdot' + (i < idx ? ' done' : i === idx ? ' active' : '');
+    });
+  });
 }
 
-function startGame() {
-  if (selectedGame < 0) return;
-  socket.emit('admin_start_game', { gameId: selectedGame });
+function showPhase(p) {
+  curPhase = p;
+  ['lobby','playing','results','done'].forEach(x => document.getElementById('ctrl-'+x).style.display = p===x?'block':'none');
+  const pill = document.getElementById('phasePill');
+  const map = {lobby:'⏸ LOBBY', countdown:'⏳ CUENTA...', playing:'🟢 JUGANDO', results:'📊 RESULTADOS', done:'🏁 TERMINADO'};
+  pill.textContent = map[p] || p;
+  pill.className = 'phase-pill' + (p==='playing'?' playing':p==='results'?' results':'');
 }
 
-function endGameNow() {
-  socket.emit('admin_end_game');
-}
+function adminStart()     { socket.emit('admin_start'); }
+function adminNextRound() { socket.emit('admin_next_round'); }
+function adminEndRound()  { socket.emit('admin_end_round'); }
+function adminReset()     { socket.emit('admin_reset'); }
 
-function resetRoom() {
-  if (confirm('¿Reiniciar la sala? Se borran los puntajes de esta ronda.')) {
-    socket.emit('admin_reset');
-  }
-}
-
-// ── Socket events ──
-socket.on('state_update', ({ players, playerCount, gameActive, currentGame }) => {
-  updatePlayerList(players);
+socket.on('state_update', ({ players, playerCount, phase }) => {
   document.getElementById('playerCount').textContent = playerCount;
-  document.getElementById('playerCountBadge').textContent = `${playerCount} JUGADOR${playerCount !== 1 ? 'ES' : ''}`;
+  document.getElementById('playerCountLabel').textContent = `${playerCount} JUGADOR${playerCount!==1?'ES':''}`;
+  updatePlayerList(players);
+  if (phase === 'lobby') showPhase('lobby');
 });
 
-socket.on('game_selected', ({ game }) => {
-  // Already handled locally
+socket.on('round_countdown', ({ game, roundNum, totalGames }) => {
+  showPhase('countdown');
+  document.getElementById('gbEmoji').textContent = game.emoji;
+  document.getElementById('gbName').textContent = game.name;
+  document.getElementById('gbSub').textContent = `Ronda ${roundNum} de ${totalGames}`;
+  updateDots(roundNum - 1);
+  setTimeout(() => { if (curPhase === 'countdown') showPhase('playing'); }, 4000);
 });
 
-socket.on('game_start', ({ gameId, game }) => {
-  document.getElementById('idleControls').style.display = 'none';
-  document.getElementById('activeControls').style.display = 'block';
-  document.getElementById('cgEmoji').textContent = game.emoji;
-  document.getElementById('cgName').textContent = game.name;
-  document.getElementById('statusPill').textContent = '🟢 JUGANDO';
-  document.getElementById('statusPill').className = 'status-pill active';
-  startTimerDisplay();
+socket.on('round_start', ({ game, duration, roundNum, totalGames }) => {
+  showPhase('playing');
+  document.getElementById('gbEmoji').textContent = game.emoji;
+  document.getElementById('gbName').textContent = game.name;
+  document.getElementById('gbSub').textContent = `Ronda ${roundNum} de ${totalGames}`;
+  updateDots(roundNum - 1);
+  startTimer(duration);
 });
 
-socket.on('live_ranking', (ranking) => {
-  updateRanking(ranking);
-});
+socket.on('live_ranking', r => updateRanking(r));
 
-socket.on('game_end', ({ ranking, game }) => {
-  clearInterval(timerInterval);
-  document.getElementById('activeControls').style.display = 'none';
-  document.getElementById('idleControls').style.display = 'block';
-  document.getElementById('statusPill').textContent = '⏸ EN ESPERA';
-  document.getElementById('statusPill').className = 'status-pill idle';
+socket.on('round_end', ({ game, ranking, nextGame, isLast, roundNum, totalGames }) => {
+  clearInterval(timerIv);
+  showPhase('results');
   updateRanking(ranking, true);
-  selectedGame = -1;
-  document.querySelectorAll('.game-btn').forEach(b => b.classList.remove('selected'));
-  document.getElementById('startBtn').disabled = true;
-  document.getElementById('startBtn').className = 'btn btn-gray';
-  document.getElementById('startBtn').textContent = '▶▶ INICIAR JUEGO';
+  document.getElementById('resTitle').textContent = `RONDA ${roundNum}/${totalGames} — ${game.name}`;
+  document.getElementById('resNextInfo').textContent = isLast ? 'Última ronda completada' : `Siguiente: ${nextGame.emoji} ${nextGame.name}`;
+  document.getElementById('nextBtn').textContent = isLast ? '🏁 VER FINAL' : '▶ SIGUIENTE JUEGO';
+});
+
+socket.on('competition_end', ({ ranking }) => {
+  showPhase('done'); updateRanking(ranking, true); clearInterval(timerIv);
+  document.getElementById('rankTitle').textContent = '🏆 RESULTADO FINAL';
 });
 
 socket.on('room_reset', () => {
-  document.getElementById('rankingList').innerHTML = '<div class="empty-msg">El ranking aparece aquí durante el juego</div>';
-  updatePlayerList([]);
+  showPhase('lobby'); clearInterval(timerIv); updateDots(-1);
+  document.getElementById('rankingList').innerHTML = '<div class="empty">El ranking aparece aquí</div>';
+  document.getElementById('rankTitle').textContent = '🏆 RANKING EN VIVO';
 });
 
-// ── Update UI ──
 function updatePlayerList(players) {
   const list = document.getElementById('playerList');
-  if (!players || players.length === 0) {
-    list.innerHTML = '<div class="empty-msg">Esperando jugadores...</div>';
-    return;
-  }
-  // Preserve existing rows, update scores
+  if (!players || !players.length) { list.innerHTML = '<div class="empty">Esperando jugadores...</div>'; return; }
   const existing = {};
   list.querySelectorAll('[data-name]').forEach(el => existing[el.dataset.name] = el);
   const names = new Set(players.map(p => p.name));
-
-  // Remove disconnected
   Object.keys(existing).forEach(n => { if (!names.has(n)) existing[n].remove(); });
-
-  // Add/update
   players.forEach((p, i) => {
-    const col = avatarColors[i % avatarColors.length];
-    const init = (p.name || '?').slice(0, 2);
+    const col = AV[i % AV.length], init = (p.name||'?').slice(0,2);
+    const hearts = '❤️'.repeat(Math.max(0, p.lives||0)) + '🖤'.repeat(Math.max(0, 3-(p.lives||0)));
     if (existing[p.name]) {
       existing[p.name].querySelector('.p-score').textContent = p.score || 0;
+      existing[p.name].querySelector('.p-lives').textContent = hearts;
     } else {
-      const row = document.createElement('div');
-      row.className = 'player-row new-anim'; row.dataset.name = p.name;
-      row.innerHTML = `<div class="p-avatar" style="background:${col}22;border:1px solid ${col};color:${col}">${init}</div>
-        <span class="p-name">${p.name}</span>
-        <span class="p-score">${p.score || 0}</span>`;
+      const row = document.createElement('div'); row.className = 'p-row'; row.dataset.name = p.name;
+      row.innerHTML = `<div class="p-av" style="background:${col}22;border:1px solid ${col};color:${col}">${init}</div>
+        <span class="p-name">${p.name}</span><span class="p-lives">${hearts}</span><span class="p-score">${p.score||0}</span>`;
       list.appendChild(row);
     }
   });
@@ -325,38 +269,29 @@ function updatePlayerList(players) {
 
 function updateRanking(ranking, final = false) {
   const list = document.getElementById('rankingList');
-  if (!ranking || ranking.length === 0) {
-    list.innerHTML = '<div class="empty-msg">Sin jugadores aún</div>';
-    return;
-  }
-  const medals = ['🥇', '🥈', '🥉'];
+  if (!ranking || !ranking.length) { list.innerHTML = '<div class="empty">Sin jugadores</div>'; return; }
+  const medals = ['🥇','🥈','🥉'];
   list.innerHTML = ranking.map((r, i) => `
-    <div class="ranking-row ${i === 0 ? 'r1' : i === 1 ? 'r2' : i === 2 ? 'r3' : 'rn'}">
-      <span class="rank-num">${i < 3 ? medals[i] : '#' + (i + 1)}</span>
-      <span class="rank-name" style="${i === 0 ? 'color:var(--yellow)' : ''}">${r.name}</span>
-      <span class="rank-score">${r.score}</span>
+    <div class="r-row ${['r1','r2','r3'][i]||'rn'}">
+      <span class="r-rank">${i<3?medals[i]:'#'+(i+1)}</span>
+      <span class="r-name" style="${i===0?'color:var(--yellow)':''}">${r.name}</span>
+      <span class="r-score">${r.score}</span>
     </div>`).join('');
-  if (final) {
-    const title = document.querySelector('#rankingList')?.parentElement?.querySelector('.panel-title');
-    if (title) title.textContent = '🏆 RESULTADO FINAL';
-  }
 }
 
-function startTimerDisplay() {
-  timeLeft = 60;
-  clearInterval(timerInterval);
-  document.getElementById('timerNum').textContent = '60';
-  document.getElementById('timerBar').style.width = '100%';
-  document.getElementById('timerBar').style.background = 'var(--green)';
-  timerInterval = setInterval(() => {
+function startTimer(duration) {
+  timeLeft = duration; clearInterval(timerIv);
+  document.getElementById('timerNum').textContent = duration;
+  document.getElementById('timerBar').style.cssText = 'width:100%;background:var(--green)';
+  timerIv = setInterval(() => {
     timeLeft--;
-    document.getElementById('timerNum').textContent = timeLeft;
-    const pct = (timeLeft / 60) * 100;
+    document.getElementById('timerNum').textContent = Math.max(0, timeLeft);
+    const pct = Math.max(0, (timeLeft / duration) * 100);
     const bar = document.getElementById('timerBar');
     bar.style.width = pct + '%';
     if (pct < 30) bar.style.background = 'var(--pink)';
     else if (pct < 60) bar.style.background = 'var(--yellow)';
-    if (timeLeft <= 0) clearInterval(timerInterval);
+    if (timeLeft <= 0) clearInterval(timerIv);
   }, 1000);
 }
 </script>
