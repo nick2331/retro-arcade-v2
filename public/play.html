@@ -261,8 +261,8 @@ socket.on('round_countdown',({game,roundNum,totalGames})=>{
 });
 
 // ROUND START
-socket.on('round_start',({gameIdx,game,duration})=>{
-  gId=gameIdx;score=0;lives=3;timeLeft=duration;gRun=true;
+socket.on('round_start',({gameIdx,game,duration,livesCount})=>{
+  gId=gameIdx;score=0;lives=livesCount||3;timeLeft=duration;gRun=true;
   document.getElementById('hNm').textContent=myName.length>9?myName.slice(0,9)+'…':myName;
   document.getElementById('hSc').textContent='0';
   document.getElementById('hTm').textContent=duration;
@@ -381,7 +381,8 @@ function buildLB(podId,listId,ranking){
     pod.appendChild(d);
   });
   const list=document.getElementById(listId);
-  list.innerHTML='<div style="font-family:\'Press Start 2P\',monospace;font-size:7px;color:var(--muted);text-align:center;margin-bottom:5px;letter-spacing:1px;">— TABLA —</div>';
+  const isTotal = listId === 'flb';
+  list.innerHTML=`<div style="font-family:'Press Start 2P',monospace;font-size:7px;color:var(--muted);text-align:center;margin-bottom:5px;letter-spacing:1px;">${isTotal?'— PUNTOS TOTALES —':'— TABLA —'}</div>`;
   ranking.forEach((r,i)=>{
     const isMe=r.name===myName;
     const d=document.createElement('div');d.className=`lb-row ${['r1','r2','r3'][i]||''}`;
@@ -580,11 +581,13 @@ let tCtx,tIv;const TC=10,TR=20;let tBoard,tPiece,tNext,tSZ;
 const TP=[{shape:[[1,1,1,1]],color:'#00d4ff'},{shape:[[1,1],[1,1]],color:'#ffe600'},{shape:[[0,1,0],[1,1,1]],color:'#aa00ff'},{shape:[[1,0,0],[1,1,1]],color:'#ff6b00'},{shape:[[0,0,1],[1,1,1]],color:'#0044ff'},{shape:[[0,1,1],[1,1,0]],color:'#ff2d78'},{shape:[[1,1,0],[0,1,1]],color:'#00ff88'}];
 function initTET(){
   const cv=document.getElementById('gc');tCtx=cv.getContext('2d');
-  tSZ=Math.min(Math.floor(cv.width/TC),Math.floor(cv.height/TR));
+  // Smaller board: 14 cols forces smaller tiles
+  tSZ=Math.min(Math.floor(cv.width/14),Math.floor(cv.height/TR));
   tBoard=Array.from({length:TR},()=>Array(TC).fill(null));
   tPiece=tSpawn();tNext=tSpawn();
   document.addEventListener('keydown',tKD);
-  clearInterval(tIv);tIv=setInterval(()=>{if(gRun)tDrop();},420);
+  // Faster: 220ms per drop (was 420ms)
+  clearInterval(tIv);tIv=setInterval(()=>{if(gRun)tDrop();},220);
   tDraw();
 }
 function tKD(e){if(gId!==3||!gRun)return;const m={'ArrowLeft':()=>tMove(-1),'ArrowRight':()=>tMove(1),'ArrowDown':tDrop,'ArrowUp':tRotate,' ':tHard};if(m[e.key]){m[e.key]();e.preventDefault();}}
