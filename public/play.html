@@ -262,7 +262,7 @@ socket.on('round_countdown',({game,roundNum,totalGames})=>{
 
 // ROUND START
 socket.on('round_start',({gameIdx,game,duration,livesCount})=>{
-  gId=gameIdx;score=0;lives=livesCount||3;timeLeft=duration;gRun=true;
+  gId=gameIdx;score=0;lives=gameIdx===3?1:(livesCount||3);timeLeft=duration;gRun=true;
   document.getElementById('hNm').textContent=myName.length>9?myName.slice(0,9)+'…':myName;
   document.getElementById('hSc').textContent='0';
   document.getElementById('hTm').textContent=duration;
@@ -552,7 +552,7 @@ function iLoop(){
     alive.forEach(e=>{e.frame=(e.frame+1)%2;if(edge)e.y+=14;else e.x+=iDirX*11;
       if(e.y+e.h>iPlayer.y){loseLife();if(lives>0){iEnemies.forEach(e=>{e.alive=true;e.y=30;});iPlayer.x=W/2-22;}return;}});
     if(edge)iDirX*=-1;
-    if(alive.length&&Math.random()<.09){const sh=alive[Math.floor(Math.random()*alive.length)];iEBullets.push({x:sh.x+sh.w/2-2,y:sh.y+sh.h,w:4,h:8,vy:2.5});}
+    if(alive.length&&Math.random()<.28){const sh=alive[Math.floor(Math.random()*alive.length)];iEBullets.push({x:sh.x+sh.w/2-2,y:sh.y+sh.h,w:4,h:8,vy:4.5});}
   }
   iBullets.forEach(b=>b.y+=b.vy);iBullets=iBullets.filter(b=>b.y>-20);
   iEBullets.forEach(b=>b.y+=b.vy);iEBullets=iEBullets.filter(b=>b.y<H+20);
@@ -586,8 +586,8 @@ function initTET(){
   tBoard=Array.from({length:TR},()=>Array(TC).fill(null));
   tPiece=tSpawn();tNext=tSpawn();
   document.addEventListener('keydown',tKD);
-  // Faster: 220ms per drop (was 420ms)
-  clearInterval(tIv);tIv=setInterval(()=>{if(gRun)tDrop();},220);
+  // Supervivencia: 140ms per drop
+  clearInterval(tIv);tIv=setInterval(()=>{if(gRun)tDrop();},140);
   tDraw();
 }
 function tKD(e){if(gId!==3||!gRun)return;const m={'ArrowLeft':()=>tMove(-1),'ArrowRight':()=>tMove(1),'ArrowDown':tDrop,'ArrowUp':tRotate,' ':tHard};if(m[e.key]){m[e.key]();e.preventDefault();}}
