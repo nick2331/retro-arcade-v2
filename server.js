@@ -21,11 +21,8 @@ const GAMES = [
 const ROUND_SECS = 60;
 
 const state = {
-  players:     {},
-  phase:       'lobby',
-  currentGame: -1,
-  roundScores: [],
-  gameTimeout: null,
+  players: {}, phase: 'lobby', currentGame: -1,
+  roundScores: [], gameTimeout: null,
 };
 
 function getPlayerList() {
@@ -40,19 +37,19 @@ function getRanking() {
 }
 function broadcastState() {
   io.emit('state_update', {
-    players:     getPlayerList(),
+    players: getPlayerList(),
     playerCount: Object.values(state.players).length,
-    phase:       state.phase,
+    phase: state.phase,
     currentGame: state.currentGame,
-    game:        state.currentGame >= 0 ? GAMES[state.currentGame] : null,
-    totalGames:  GAMES.length,
+    game: state.currentGame >= 0 ? GAMES[state.currentGame] : null,
+    totalGames: GAMES.length,
   });
 }
 
 function launchRound(idx) {
   if (idx >= GAMES.length) {
     state.phase = 'done';
-    io.emit('competition_end', { ranking: getRanking(), rounds: state.roundScores });
+    io.emit('competition_end', { ranking: getRanking() });
     broadcastState();
     return;
   }
@@ -63,11 +60,17 @@ function launchRound(idx) {
     state.players[id].lives = 3;
     state.players[id].alive = true;
   });
-  io.emit('round_countdown', { gameIdx: idx, game: GAMES[idx], totalGames: GAMES.length, roundNum: idx + 1 });
+  io.emit('round_countdown', {
+    gameIdx: idx, game: GAMES[idx],
+    totalGames: GAMES.length, roundNum: idx + 1,
+  });
   broadcastState();
   setTimeout(() => {
     state.phase = 'playing';
-    io.emit('round_start', { gameIdx: idx, game: GAMES[idx], duration: ROUND_SECS, roundNum: idx + 1, totalGames: GAMES.length });
+    io.emit('round_start', {
+      gameIdx: idx, game: GAMES[idx],
+      duration: ROUND_SECS, roundNum: idx + 1, totalGames: GAMES.length,
+    });
     broadcastState();
     clearTimeout(state.gameTimeout);
     state.gameTimeout = setTimeout(() => endRound(idx), (ROUND_SECS + 2) * 1000);
@@ -78,14 +81,13 @@ function endRound(idx) {
   if (state.phase !== 'playing') return;
   clearTimeout(state.gameTimeout);
   const ranking = getRanking();
-  state.roundScores.push({ game: GAMES[idx], ranking, ts: new Date().toISOString() });
+  state.roundScores.push({ game: GAMES[idx], ranking });
   state.phase = 'results';
   io.emit('round_end', {
     game: GAMES[idx], ranking,
-    nextGame:   idx + 1 < GAMES.length ? GAMES[idx + 1] : null,
-    isLast:     idx + 1 >= GAMES.length,
-    roundNum:   idx + 1,
-    totalGames: GAMES.length,
+    nextGame: idx + 1 < GAMES.length ? GAMES[idx + 1] : null,
+    isLast: idx + 1 >= GAMES.length,
+    roundNum: idx + 1, totalGames: GAMES.length,
   });
   broadcastState();
 }
@@ -97,7 +99,10 @@ io.on('connection', (socket) => {
       socket.emit('join_error', { msg: 'Ese nombre ya está en uso' }); return;
     }
     state.players[socket.id] = { name: clean, score: 0, lives: 3, alive: true };
-    socket.emit('join_ok', { name: clean, phase: state.phase, currentGame: state.currentGame, game: state.currentGame >= 0 ? GAMES[state.currentGame] : null, games: GAMES });
+    socket.emit('join_ok', {
+      name: clean, phase: state.phase,
+      game: state.currentGame >= 0 ? GAMES[state.currentGame] : null,
+    });
     broadcastState();
   });
 
@@ -107,7 +112,9 @@ io.on('connection', (socket) => {
   socket.on('admin_reset', () => {
     clearTimeout(state.gameTimeout);
     state.phase = 'lobby'; state.currentGame = -1; state.roundScores = [];
-    Object.keys(state.players).forEach(id => { state.players[id].score = 0; state.players[id].lives = 3; state.players[id].alive = true; });
+    Object.keys(state.players).forEach(id => {
+      state.players[id].score = 0; state.players[id].lives = 3; state.players[id].alive = true;
+    });
     io.emit('room_reset'); broadcastState();
   });
 
@@ -125,7 +132,11 @@ io.on('connection', (socket) => {
     io.emit('live_ranking', getRanking()); broadcastState();
   });
   socket.on('player_game_over', ({ score }) => {
-    if (state.players[socket.id]) { state.players[socket.id].score = score; state.players[socket.id].alive = false; state.players[socket.id].lives = 0; }
+    if (state.players[socket.id]) {
+      state.players[socket.id].score = score;
+      state.players[socket.id].alive = false;
+      state.players[socket.id].lives = 0;
+    }
     io.emit('live_ranking', getRanking());
   });
   socket.on('disconnect', () => {
