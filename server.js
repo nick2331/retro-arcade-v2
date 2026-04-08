@@ -33,7 +33,7 @@ function getPlayerList() {
 function getRanking() {
   return Object.values(state.players)
     .sort((a, b) => b.score - a.score)
-    .map((p, i) => ({ rank: i + 1, name: p.name, score: p.score }));
+    .map((p, i) => ({ rank: i + 1, name: p.name, score: p.score, totalScore: p.totalScore || 0 }));
 }
 function broadcastState() {
   io.emit('state_update', {
@@ -49,15 +49,20 @@ function broadcastState() {
 function launchRound(idx) {
   if (idx >= GAMES.length) {
     state.phase = 'done';
-    io.emit('competition_end', { ranking: getRanking() });
+    // Final ranking uses totalScore
+    const finalRanking = Object.values(state.players)
+      .sort((a, b) => b.totalScore - a.totalScore)
+      .map((p, i) => ({ rank: i + 1, name: p.name, score: p.totalScore }));
+    io.emit('competition_end', { ranking: finalRanking });
     broadcastState();
     return;
   }
   state.currentGame = idx;
   state.phase = 'countdown';
+  const livesForRound = idx === 3 ? 1 : 3; // Tetris: 1 vida
   Object.keys(state.players).forEach(id => {
     state.players[id].score = 0;
-    state.players[id].lives = 3;
+    state.players[id].lives = livesForRound;
     state.players[id].alive = true;
   });
   io.emit('round_countdown', {
@@ -80,6 +85,10 @@ function launchRound(idx) {
 function endRound(idx) {
   if (state.phase !== 'playing') return;
   clearTimeout(state.gameTimeout);
+  // Add round score to totalScore
+  Object.keys(state.players).forEach(id => {
+    state.players[id].totalScore = (state.players[id].totalScore || 0) + state.players[id].score;
+  });
   const ranking = getRanking();
   state.roundScores.push({ game: GAMES[idx], ranking });
   state.phase = 'results';
@@ -98,7 +107,7 @@ io.on('connection', (socket) => {
     if (Object.values(state.players).find(p => p.name === clean)) {
       socket.emit('join_error', { msg: 'Ese nombre ya está en uso' }); return;
     }
-    state.players[socket.id] = { name: clean, score: 0, lives: 3, alive: true };
+    state.players[socket.id] = { name: clean, score: 0, totalScore: 0, lives: 3, alive: true };
     socket.emit('join_ok', {
       name: clean, phase: state.phase,
       game: state.currentGame >= 0 ? GAMES[state.currentGame] : null,
